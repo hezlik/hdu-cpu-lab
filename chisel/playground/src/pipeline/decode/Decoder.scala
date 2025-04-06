@@ -28,9 +28,38 @@ class Decoder extends Module with HasInstrType {
 
   // TODO: 完成Decoder模块的逻辑
   // io.out.info.valid      :=
-  // io.out.info.src1_raddr :=
+  // io.out.info.src1_raddr := 
   // io.out.info.src2_raddr :=
   // io.out.info.op         :=
   // io.out.info.reg_wen    :=
   // io.out.info.reg_waddr  :=
+
+  // LAB1: Decoder
+  io.out.info.valid      := instrType =/= InstrN
+  io.out.info.src1_raddr := rs
+  io.out.info.src2_raddr := rt
+  io.out.info.op         := fuOpType
+  io.out.info.reg_wen    := (instrType =/= InstrS) && (instrType =/= InstrB)
+  io.out.info.reg_waddr  := rd
+
+  // LAB2: Decoder
+  io.out.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
+  io.out.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
+  io.out.info.src1_pcen  := inst === BitPat("b????????????????????_?????_0010111")
+  
+  // LAB2: Decoder : imm
+  val imm = Wire(UInt(XLEN.W))
+  imm := 0.U
+  switch (instrType) {
+    is (InstrI) {
+      val imm12 = inst(31, 20)
+      imm := Cat(Fill(54, imm12(11)), imm12)
+    }
+    is (InstrU) {
+      val imm32 = inst(31, 12) << 12
+      imm := Cat(Fill(32, imm32(31)), imm32)
+    }
+  }
+  io.out.info.imm := imm
+
 }

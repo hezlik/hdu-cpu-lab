@@ -19,7 +19,8 @@ Disassembly of section .text:
     8000002c:	87398e13          	addi	x28,x19,-1933
     80000030:	cc329cb7          	lui	x25,0xcc329
     80000034:	000dde9b          	srliw	x29,x27,0x0
-    80000038:	aa90bd97          	auipc	x27,0xaa90b
+    80000038:	aa90bd97          	auipc= io.regfile.src1.rdata
+  io.executeStage.data.src_info.src2_data :	x27,0xaa90b
     8000003c:	a0354b93          	xori	x23,x10,-1533
     80000040:	71832937          	lui	x18,0x71832
     80000044:	65524e13          	xori	x28,x4,1621

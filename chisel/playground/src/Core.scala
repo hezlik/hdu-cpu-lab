@@ -32,4 +32,26 @@ class Core extends Module {
 
   // TODO: 完成Core模块的逻辑
   // 在该模块中，需要将各个模块连接起来，形成一个完整的CPU核心
+
+  // LAB1: Decode
+  decodeStage.decodeUnit <> decodeUnit.decodeStage
+  decodeUnit.regfile <> regfile.read
+  decodeUnit.executeStage <> executeStage.decodeUnit
+
+  // LAB1: Execute
+  executeStage.executeUnit <> executeUnit.executeStage
+  executeUnit.dataSram <> io.dataSram
+  executeUnit.memoryStage <> memoryStage.executeUnit
+
+  // LAB1: Memory
+  memoryStage.memoryUnit <> memoryUnit.memoryStage
+  memoryUnit.writeBackStage <> writeBackStage.memoryUnit
+
+  // LAB1: Writeback
+  writeBackStage.writeBackUnit <> writeBackUnit.writeBackStage
+  writeBackUnit.regfile <> regfile.write
+
+  // LAB1: Difftest
+  writeBackUnit.debug <> io.debug
+
 }

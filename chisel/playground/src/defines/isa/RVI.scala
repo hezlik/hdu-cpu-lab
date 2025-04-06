@@ -34,8 +34,36 @@ object RV32I_ALUInstr extends HasInstrType with CoreParameter {
   // 在Decoder模块中搭配ListLookup函数使用
   val table = Array(
     // ADD指令将被解析为InstrR类型的指令，功能单元类型为alu，功能单元操作类型为add
-    ADD -> List(InstrR, FuType.alu, ALUOpType.add)
+    // ADD -> List(InstrR, FuType.alu, ALUOpType.add)
     // TODO: 完成其他指令的解析
+
+    // LAB1: RV32I_ALUInstr : R type
+    ADD  -> List(InstrR, FuType.alu, ALUOpType.add),
+    SLL  -> List(InstrR, FuType.alu, ALUOpType.sll),
+    SLT  -> List(InstrR, FuType.alu, ALUOpType.slt),
+    SLTU -> List(InstrR, FuType.alu, ALUOpType.sltu),
+    XOR  -> List(InstrR, FuType.alu, ALUOpType.xor),
+    SRL  -> List(InstrR, FuType.alu, ALUOpType.srl),
+    OR   -> List(InstrR, FuType.alu, ALUOpType.or),
+    AND  -> List(InstrR, FuType.alu, ALUOpType.and),
+    SUB  -> List(InstrR, FuType.alu, ALUOpType.sub),
+    SRA  -> List(InstrR, FuType.alu, ALUOpType.sra),
+
+    // LAB2: RV32I_ALUInstr : I type
+    ADDI  -> List(InstrI, FuType.alu, ALUOpType.add),
+    SLLI  -> List(InstrI, FuType.alu, ALUOpType.sll),
+    SLTI  -> List(InstrI, FuType.alu, ALUOpType.slt),
+    SLTIU -> List(InstrI, FuType.alu, ALUOpType.sltu),
+    XORI  -> List(InstrI, FuType.alu, ALUOpType.xor),
+    SRLI  -> List(InstrI, FuType.alu, ALUOpType.srl),
+    ORI   -> List(InstrI, FuType.alu, ALUOpType.or),
+    ANDI  -> List(InstrI, FuType.alu, ALUOpType.and),
+    SRAI  -> List(InstrI, FuType.alu, ALUOpType.sra),
+
+    // LAB2: RV32I_ALUInstr : U type
+    AUIPC -> List(InstrU, FuType.alu, ALUOpType.add),
+    LUI   -> List(InstrU, FuType.alu, ALUOpType.add),
+
   )
 }
 
@@ -52,6 +80,20 @@ object RV64IInstr extends HasInstrType {
 
   val table = Array(
     // TODO: 完成RV64I指令集的解析
+
+    // LAB1: RV64IInstr : R type
+    SLLW -> List(InstrR, FuType.alu, ALUOpType.sllw),
+    SRLW -> List(InstrR, FuType.alu, ALUOpType.srlw),
+    SRAW -> List(InstrR, FuType.alu, ALUOpType.sraw),
+    ADDW -> List(InstrR, FuType.alu, ALUOpType.addw),
+    SUBW -> List(InstrR, FuType.alu, ALUOpType.subw),
+
+    // LAB2: RV64IInstr : I type
+    SLLIW -> List(InstrI, FuType.alu, ALUOpType.sllw),
+    SRLIW -> List(InstrI, FuType.alu, ALUOpType.srlw),
+    SRAIW -> List(InstrI, FuType.alu, ALUOpType.sraw),
+    ADDIW -> List(InstrI, FuType.alu, ALUOpType.addw),
+
   )
 }
 

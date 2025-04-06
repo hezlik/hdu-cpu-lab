@@ -24,4 +24,9 @@ class WriteBackStage extends Module {
   val data = RegInit(0.U.asTypeOf(new MemWbData()))
   
   // TODO: 完成WriteBackStage模块的逻辑
+
+  // LAB1: WriteBackStage
+  data := io.memoryUnit.data
+  io.writeBackUnit.data := data
+  
 }

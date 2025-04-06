@@ -28,4 +28,11 @@ class ExecuteUnit extends Module {
   // io.memoryStage.data.info     := 
   // io.memoryStage.data.src_info := 
   // io.memoryStage.data.rd_info  := 
+
+  // LAB1: ExecuteUnit
+  io.memoryStage.data.pc       := fu.data.pc
+  io.memoryStage.data.info     := fu.data.info
+  io.memoryStage.data.src_info := fu.data.src_info
+  io.memoryStage.data.rd_info  := fu.data.rd_info
+  
 }

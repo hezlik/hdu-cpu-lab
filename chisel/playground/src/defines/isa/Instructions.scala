@@ -31,6 +31,24 @@ object FuOpType {
 
 // 算术逻辑单元操作类型 Arithmetic Logic Unit Operation Type
 object ALUOpType {
-  def add = "b00000".U
+  // def add = 1.U
   // TODO: 定义更多的ALU操作类型
+
+  // LAB1: ALUOpType
+  def add  = 0.U
+  def sub  = 1.U
+  def sll  = 2.U
+  def slt  = 3.U
+  def sltu = 4.U
+  def xor  = 5.U
+  def srl  = 6.U
+  def sra  = 7.U
+  def or   = 8.U
+  def and  = 9.U
+  def addw = 10.U
+  def subw = 11.U
+  def sllw = 12.U
+  def srlw = 13.U
+  def sraw = 14.U
+
 }
