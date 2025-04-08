@@ -34,6 +34,10 @@ class Info extends Bundle {
   val src2_ren   = Bool()
   val imm        = UInt(XLEN.W)
   val src1_pcen  = Bool()
+
+  // LAB3: New Info
+  val fusel      = FuType()
+  
 }
 
 class SrcReadSignal extends Bundle {

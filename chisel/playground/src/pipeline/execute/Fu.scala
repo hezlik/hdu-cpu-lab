@@ -18,15 +18,35 @@ class Fu extends Module {
     val dataSram = new DataSram()
   })
 
-  val alu = Module(new Alu()).io
+  // val alu = Module(new Alu()).io
 
   io.dataSram.en    := false.B
   io.dataSram.addr  := DontCare
   io.dataSram.wdata := DontCare
   io.dataSram.wen   := 0.U
 
-  alu.info     := io.data.info
-  alu.src_info := io.data.src_info
+  // alu.info     := io.data.info
+  // alu.src_info := io.data.src_info
 
-  io.data.rd_info.wdata := alu.result
+  // io.data.rd_info.wdata := alu.result
+
+  // LAB3: Reconstruct Logic of Fu
+  val res = Wire(UInt(XLEN.W))
+  res := 0.U
+  switch (io.data.info.fusel) {
+    is (FuType.alu) {
+      val alu = Module(new Alu()).io
+      alu.info     := io.data.info
+      alu.src_info := io.data.src_info
+      res          := alu.result
+    }
+    is (FuType.mdu) {
+      val mdu = Module(new Mdu()).io
+      mdu.info     := io.data.info
+      mdu.src_info := io.data.src_info
+      res          := mdu.result
+    }
+  }
+  io.data.rd_info.wdata := res
+
 }

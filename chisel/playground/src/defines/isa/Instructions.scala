@@ -18,9 +18,17 @@ trait HasInstrType {
 }
 
 // 功能单元类型 Function Unit Type
+// object FuType {
+//   def num     = 1
+//   def alu     = 0.U // arithmetic logic unit
+//   def apply() = UInt(log2Up(num).W)
+// }
+
+// LAB3: FuType
 object FuType {
-  def num     = 1
-  def alu     = 0.U // arithmetic logic unit
+  def num        = 2
+  def alu        = 0.U
+  def mdu        = 1.U
   def apply() = UInt(log2Up(num).W)
 }
 
@@ -50,5 +58,24 @@ object ALUOpType {
   def sllw = 12.U
   def srlw = 13.U
   def sraw = 14.U
+
+}
+
+// LAB3 : MDUOpType
+object MDUOpType {
+
+  def mul    = 0.U
+  def mulh   = 1.U
+  def mulhsu = 2.U
+  def mulhu  = 3.U
+  def div    = 4.U
+  def divu   = 5.U
+  def rem    = 6.U
+  def remu   = 7.U
+  def mulw   = 8.U
+  def divw   = 9.U
+  def divuw  = 10.U
+  def remw   = 12.U
+  def remuw  = 13.U
 
 }

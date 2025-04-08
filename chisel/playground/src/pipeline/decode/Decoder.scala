@@ -46,7 +46,7 @@ class Decoder extends Module with HasInstrType {
   io.out.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
   io.out.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
   io.out.info.src1_pcen  := inst === BitPat("b????????????????????_?????_0010111")
-  
+
   // LAB2: Decoder : imm
   val imm = Wire(UInt(XLEN.W))
   imm := 0.U
@@ -61,5 +61,8 @@ class Decoder extends Module with HasInstrType {
     }
   }
   io.out.info.imm := imm
+
+  // LAB3: Decoder
+  io.out.info.fusel      := fuType
 
 }
