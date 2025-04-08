@@ -9,7 +9,7 @@ https://code.educoder.net/ppg69fuwb/riscv-lab
 `playground/src/defines/isa/Instructions.scala`：
 
 ```scala
-	// LAB1: ALUOpType
+  // LAB1: ALUOpType
   def add  = 0.U
   def sub  = 1.U
   def sll  = 2.U
@@ -32,7 +32,7 @@ https://code.educoder.net/ppg69fuwb/riscv-lab
 `playground/src/defines/isa/RVI.scala`：
 
 ```scala
-		// LAB1: RV32I_ALUInstr : R type
+    // LAB1: RV32I_ALUInstr : R type
     ADD  -> List(InstrR, FuType.alu, ALUOpType.add),
     SLL  -> List(InstrR, FuType.alu, ALUOpType.sll),
     SLT  -> List(InstrR, FuType.alu, ALUOpType.slt),
@@ -66,7 +66,7 @@ object RVIInstr extends CoreParameter {
 `playground/src/pipeline/decode/ARegfile.scala`：
 
 ```scala
-	// LAB1: Initialize Register regs(i) = i
+  // LAB1: Initialize Register regs(i) = i
   val regs = RegInit(VecInit(
      0.U(XLEN.W),  1.U(XLEN.W),  2.U(XLEN.W),  3.U(XLEN.W),
      4.U(XLEN.W),  5.U(XLEN.W),  6.U(XLEN.W),  7.U(XLEN.W),
@@ -78,7 +78,7 @@ object RVIInstr extends CoreParameter {
     28.U(XLEN.W), 29.U(XLEN.W), 30.U(XLEN.W), 31.U(XLEN.W),
   ))
 
-	// LAB1: Register : Write
+  // LAB1: Register : Write
   when (io.write.wen && (io.write.waddr =/= 0.U)) {
     regs(io.write.waddr) := io.write.wdata
   }
@@ -122,7 +122,7 @@ object RVIInstr extends CoreParameter {
 `playground/src/pipeline/decode/DecodeUnit.scala`：
 
 ```scala
-	// LAB1: DecodeUnit : Decode -> addr -> Register
+  // LAB1: DecodeUnit : Decode -> addr -> Register
   io.regfile.src1.raddr := info.src1_raddr
   io.regfile.src2.raddr := info.src2_raddr
 
@@ -136,7 +136,7 @@ object RVIInstr extends CoreParameter {
 `playground/src/pipeline/execute/ExecuteStage.scala`：
 
 ```scala
-	// LAB1: ALU
+  // LAB1: ALU
   val valid = io.info.valid
   val op    = io.info.op
   val rs    = io.src_info.src1_data
@@ -469,3 +469,263 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 然后 `git push` 就可以丢自己仓库了！
 
 需要实验框架的更新可以再改回来 `git pull`。
+
+## Lab3 - Code
+
+`playground/src/defines/isa/Instructions.scala`：
+
+```scala
+// LAB3: FuType
+object FuType {
+  def num        = 2
+  def alu        = 0.U
+  def mdu        = 1.U
+  def apply() = UInt(log2Up(num).W)
+}
+
+// LAB3 : MDUOpType
+object MDUOpType {
+
+  def mul    = 0.U
+  def mulh   = 1.U
+  def mulhsu = 2.U
+  def mulhu  = 3.U
+  def div    = 4.U
+  def divu   = 5.U
+  def rem    = 6.U
+  def remu   = 7.U
+  def mulw   = 8.U
+  def divw   = 9.U
+  def divuw  = 10.U
+  def remw   = 12.U
+  def remuw  = 13.U
+
+}
+```
+
+这里新增一种 `FU` 部件即 `MDU`，专门用来处理乘除法运算指令，即 RV32/64M 指令集。
+
+`playground/src/defines/isa/RVI.scala`：
+
+```scala
+// LAB3: RV32MInstr
+
+object RV32MInstr extends HasInstrType with CoreParameter {
+  
+  def MUL    = BitPat("b0000001_?????_?????_000_?????_0110011")
+  def MULH   = BitPat("b0000001_?????_?????_001_?????_0110011")
+  def MULHSU = BitPat("b0000001_?????_?????_010_?????_0110011")
+  def MULHU  = BitPat("b0000001_?????_?????_011_?????_0110011")
+  def DIV    = BitPat("b0000001_?????_?????_100_?????_0110011")
+  def DIVU   = BitPat("b0000001_?????_?????_101_?????_0110011")
+  def REM    = BitPat("b0000001_?????_?????_110_?????_0110011")
+  def REMU   = BitPat("b0000001_?????_?????_111_?????_0110011")
+
+  val table = Array(
+
+    MUL    -> List(InstrR, FuType.mdu, MDUOpType.mul),
+    MULH   -> List(InstrR, FuType.mdu, MDUOpType.mulh),
+    MULHSU -> List(InstrR, FuType.mdu, MDUOpType.mulhsu),
+    MULHU  -> List(InstrR, FuType.mdu, MDUOpType.mulhu),
+    DIV    -> List(InstrR, FuType.mdu, MDUOpType.div),
+    DIVU   -> List(InstrR, FuType.mdu, MDUOpType.divu),
+    REM    -> List(InstrR, FuType.mdu, MDUOpType.rem),
+    REMU   -> List(InstrR, FuType.mdu, MDUOpType.remu),
+
+  )
+
+}
+
+// LAB3: RV64MInstr
+
+object RV64MInstr extends HasInstrType with CoreParameter {
+
+  def MULW  = BitPat("b0000001_?????_?????_000_?????_0111011")
+  def DIVW  = BitPat("b0000001_?????_?????_100_?????_0111011")
+  def DIVUW = BitPat("b0000001_?????_?????_101_?????_0111011")
+  def REMW  = BitPat("b0000001_?????_?????_110_?????_0111011")
+  def REMUW = BitPat("b0000001_?????_?????_111_?????_0111011")
+
+  val table = Array(
+
+    MULW  -> List(InstrR, FuType.mdu, MDUOpType.mulw),
+    DIVW  -> List(InstrR, FuType.mdu, MDUOpType.divw),
+    DIVUW -> List(InstrR, FuType.mdu, MDUOpType.divuw),
+    REMW  -> List(InstrR, FuType.mdu, MDUOpType.remw),
+    REMUW -> List(InstrR, FuType.mdu, MDUOpType.remuw),
+
+  )
+  
+}
+
+object RVIInstr extends CoreParameter {
+  val table = RV32I_ALUInstr.table ++
+    (if (XLEN == 64) RV64IInstr.table else Array.empty) ++
+    // LAB3: RVIInstr : RV32MInstr & RV64MInstr
+    RV32MInstr.table ++
+    (if (XLEN == 64) RV64MInstr.table else Array.empty)
+}
+```
+
+模仿之前的 `RV32I_ALUInstr` 和 `RV64IInstr` 写就可以了，注意检查一下不要抄错 RISC-V 手册。
+
+`playground/src/defines/Bundles.scala`：
+
+```scala
+  // LAB3: New Info
+  val fusel      = FuType()
+```
+
+就新加一个 `fusel` 表示使用哪个 `FU` 部件就行了。
+
+`playground/src/pipeline/decode/Decoder.scala`：
+
+```scala
+  // LAB3: Decoder
+  io.out.info.fusel      := fuType
+```
+
+`Decoder.scala` 中也需要提取出使用哪个 `FU` 部件的信息。
+
+`playground/src/pipeline/execute/Fu.scala`：
+
+```scala
+  // LAB3: Reconstruct Logic of Fu
+  val res = Wire(UInt(XLEN.W))
+  res := 0.U
+  switch (io.data.info.fusel) {
+    is (FuType.alu) {
+      val alu = Module(new Alu()).io
+      alu.info     := io.data.info
+      alu.src_info := io.data.src_info
+      res          := alu.result
+    }
+    is (FuType.mdu) {
+      val mdu = Module(new Mdu()).io
+      mdu.info     := io.data.info
+      mdu.src_info := io.data.src_info
+      res          := mdu.result
+    }
+  }
+  io.data.rd_info.wdata := res
+```
+
+此时需要在 `Fu.scala` 中实现按照 `fusel` 选择对应 `FU` 部件的功能。
+
+`playground/src/pipeline/execute/fu/Mdu.scala`：
+
+```scala
+// LAB3: MDU Module
+
+package cpu.pipeline
+
+import chisel3._
+import chisel3.util._
+import cpu.defines._
+import cpu.defines.Const._
+
+class Mdu extends Module {
+  val io = IO(new Bundle {
+    val info     = Input(new Info())
+    val src_info = Input(new SrcInfo())
+    val result   = Output(UInt(XLEN.W))
+  })
+
+  val valid = io.info.valid
+  val op    = io.info.op
+  val rs    = io.src_info.src1_data
+  val rt    = io.src_info.src2_data
+
+  def W(x : UInt) = {
+    val x32 = x(31, 0)
+    Cat(Fill(32, x32(31)), x32)
+  }
+
+  val res = Wire(UInt(XLEN.W))
+  res := rs * rt
+  when (valid) {
+    switch (op) {
+      is (MDUOpType.   mul) { res := rs * rt }
+      is (MDUOpType.  mulh) { res := (rs.asSInt * rt.asSInt)(127, 64) }
+      is (MDUOpType.mulhsu) { res := (rs.asSInt * rt).asSInt(127, 64) }
+      is (MDUOpType. mulhu) { res := (rs * rt)(127, 64) }
+      is (MDUOpType.   div) {
+        res := Mux(
+          rt === 0.U,
+          "hffffffffffffffff".U,
+          (rs.asSInt / rt.asSInt)(63, 0)
+        )
+      }
+      is (MDUOpType.  divu) {
+        res := Mux(
+          rt === 0.U,
+          "hffffffffffffffff".U,
+          rs / rt
+        )
+      }
+      is (MDUOpType.   rem) {
+        res := Mux(
+          rt === 0.U,
+          rs,
+          (rs.asSInt - rt.asSInt * (rs.asSInt / rt.asSInt))(63, 0)
+        )
+      }
+      is (MDUOpType.  remu) {
+        res := Mux(
+          rt === 0.U,
+          rs,
+          rs % rt
+        )
+      }
+      is (MDUOpType.  mulw) { res := W(rs * rt) }
+      is (MDUOpType.  divw) {
+        res := Mux(
+          rt(31,0) === 0.U,
+          "hffffffffffffffff".U,
+          W((rs(31, 0).asSInt / rt(31, 0).asSInt).asUInt)
+        )
+      }
+      is (MDUOpType. divuw) {
+        res := Mux(
+          rt(31, 0) === 0.U,
+          "hffffffffffffffff".U,
+          W(rs(31, 0) / rt(31, 0))
+        )
+      }
+      is (MDUOpType.  remw) {
+        res := Mux(
+          rt(31, 0) === 0.U,
+          W(rs(31, 0)),
+          W((rs(31, 0).asSInt % rt(31, 0).asSInt).asUInt)
+        )
+      }
+      is (MDUOpType. remuw) {
+        res := Mux(
+          rt(31, 0) === 0.U,
+          W(rs(31,0)),
+          W(rs(31, 0) % rt(31, 0))
+        )
+      }
+    }
+  }
+  io.result := res
+
+}
+```
+
+这个具体实现 `MDU` 的部分有很多问题，主要就是不太了解 RISC-V 手册中的乘除法和 `scala` 中的乘除法在各种情况下的结果，最后情况都是试出来的。
+
+首先我先假设 `scala` 中的乘除法和 RISC-V 手册中的乘除法行为一致，写了第一个版本。然后反复差分测试，发现问题主要在于除法：
+
+1. 除法的除数为 $0$ 时，需要让商为整型最大值，余数为被除数。
+2. 有符号取余要通过被除数 $-$ 商 $\times$ 除数实现。
+
+我觉得这个部分的测试应该不是很强，大概率写的代码还有问题，但是问题可以先交给以后的我！
+
+## Lab3 - report
+
+鸽。
+
+## Lab3 - Thinking & Exploration
+
+鸽。

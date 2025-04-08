@@ -110,7 +110,6 @@ object RV32MInstr extends HasInstrType with CoreParameter {
   def REM    = BitPat("b0000001_?????_?????_110_?????_0110011")
   def REMU   = BitPat("b0000001_?????_?????_111_?????_0110011")
 
-  // 在Decoder模块中搭配ListLookup函数使用
   val table = Array(
 
     MUL    -> List(InstrR, FuType.mdu, MDUOpType.mul),
@@ -136,7 +135,6 @@ object RV64MInstr extends HasInstrType with CoreParameter {
   def REMW  = BitPat("b0000001_?????_?????_110_?????_0111011")
   def REMUW = BitPat("b0000001_?????_?????_111_?????_0111011")
 
-  // 在Decoder模块中搭配ListLookup函数使用
   val table = Array(
 
     MULW  -> List(InstrR, FuType.mdu, MDUOpType.mulw),
