@@ -30,7 +30,7 @@ class Fu extends Module {
 
   // io.data.rd_info.wdata := alu.result
 
-  // LAB3: Reconstruct Logic of Fu
+  // LAB3: Reconstruct Logic of FU
   val res = Wire(UInt(XLEN.W))
   res := 0.U
   switch (io.data.info.fusel) {
@@ -45,6 +45,13 @@ class Fu extends Module {
       mdu.info     := io.data.info
       mdu.src_info := io.data.src_info
       res          := mdu.result
+    }
+    // LAB4: New FU : LSU
+    is (FuType.lsu) {
+      val lsu = Module(new Lsu()).io
+      lsu.info     := io.data.info
+      lsu.src_info := io.data.src_info
+      io.dataSram  <> lsu.dataSram 
     }
   }
   io.data.rd_info.wdata := res

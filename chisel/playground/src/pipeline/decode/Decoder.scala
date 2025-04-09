@@ -59,6 +59,11 @@ class Decoder extends Module with HasInstrType {
       val imm32 = inst(31, 12) << 12
       imm := Cat(Fill(32, imm32(31)), imm32)
     }
+    // LAB4: Decoder : imm : InstrS
+    is (InstrS) {
+      val imm12 = Cat(inst(31, 25), inst(11, 7))
+      imm := Cat(Fill(54, imm12(11)), imm12)
+    }
   }
   io.out.info.imm := imm
 

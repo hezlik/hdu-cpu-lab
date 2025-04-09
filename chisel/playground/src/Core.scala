@@ -47,6 +47,9 @@ class Core extends Module {
   memoryStage.memoryUnit <> memoryUnit.memoryStage
   memoryUnit.writeBackStage <> writeBackStage.memoryUnit
 
+  // LAB4: Memory
+  memoryUnit.loadData := io.dataSram.rdata
+
   // LAB1: Writeback
   writeBackStage.writeBackUnit <> writeBackUnit.writeBackStage
   writeBackUnit.regfile <> regfile.write

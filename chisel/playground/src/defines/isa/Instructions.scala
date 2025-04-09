@@ -25,10 +25,19 @@ trait HasInstrType {
 // }
 
 // LAB3: FuType
+// object FuType {
+//   def num     = 2
+//   def alu     = 0.U
+//   def mdu     = 1.U
+//   def apply() = UInt(log2Up(num).W)
+// }
+
+// LAB4: FuType
 object FuType {
-  def num        = 2
-  def alu        = 0.U
-  def mdu        = 1.U
+  def num     = 3
+  def alu     = 0.U
+  def mdu     = 1.U
+  def lsu     = 2.U
   def apply() = UInt(log2Up(num).W)
 }
 
@@ -61,7 +70,7 @@ object ALUOpType {
 
 }
 
-// LAB3 : MDUOpType
+// LAB3: MDUOpType
 object MDUOpType {
 
   def mul    = 0.U
@@ -77,5 +86,22 @@ object MDUOpType {
   def divuw  = 10.U
   def remw   = 12.U
   def remuw  = 13.U
+
+}
+
+// LAB4: LSUOpType
+object LSUOpType {
+
+  def lb  = 0.U
+  def lh  = 1.U
+  def lw  = 2.U
+  def ld  = 3.U
+  def lbu = 4.U
+  def lhu = 5.U
+  def lwu = 6.U
+  def sb  = 7.U
+  def sh  = 8.U
+  def sw  = 9.U
+  def sd  = 10.U
 
 }
