@@ -425,7 +425,7 @@ lab2 开始这个部分改回 `regs(i) = 0`。
 
 调试的时候在汇编文件 `lab2.asm` 中读到差分测试出错的指令是这几条位运算，第一反应就是直接重新读一遍 RISC-V 手册，大概率是实现和手册不一致导致的这类问题，所以也没有用上 gtkwave 啥的调试工具。
 
-这里还有一个问题，在老版的 RISC-V 手册中 `sraw` 等指令要求 `rs2` 的第 $5$ 位必须是 $0$ 才能有效，而在模式匹配 `BitPat` 中我们并没有体现这一点。然而查阅最新的手册发现，现在这个问题已经变成一个可选的情况了，所以不管它就行。
+这里还有一个问题，在老版的 RISC-V 手册中 `srai` 等指令要求 `imm` 的第 $5$ 位必须是 $0$ 才能有效，然而查阅最新的手册发现，现在这个问题已经变成一个可选的情况了。事实上这个问题在模式匹配 `BitPat` 中是按照老版写了的。
 
 ## Lab2 - report
 
@@ -509,13 +509,13 @@ object MDUOpType {
 
 ```scala
 // LAB3: RV32MInstr
-
 object RV32MInstr extends HasInstrType with CoreParameter {
   
   def MUL    = BitPat("b0000001_?????_?????_000_?????_0110011")
   def MULH   = BitPat("b0000001_?????_?????_001_?????_0110011")
   def MULHSU = BitPat("b0000001_?????_?????_010_?????_0110011")
   def MULHU  = BitPat("b0000001_?????_?????_011_?????_0110011")
+  
   def DIV    = BitPat("b0000001_?????_?????_100_?????_0110011")
   def DIVU   = BitPat("b0000001_?????_?????_101_?????_0110011")
   def REM    = BitPat("b0000001_?????_?????_110_?????_0110011")
@@ -527,6 +527,7 @@ object RV32MInstr extends HasInstrType with CoreParameter {
     MULH   -> List(InstrR, FuType.mdu, MDUOpType.mulh),
     MULHSU -> List(InstrR, FuType.mdu, MDUOpType.mulhsu),
     MULHU  -> List(InstrR, FuType.mdu, MDUOpType.mulhu),
+    
     DIV    -> List(InstrR, FuType.mdu, MDUOpType.div),
     DIVU   -> List(InstrR, FuType.mdu, MDUOpType.divu),
     REM    -> List(InstrR, FuType.mdu, MDUOpType.rem),
@@ -537,10 +538,10 @@ object RV32MInstr extends HasInstrType with CoreParameter {
 }
 
 // LAB3: RV64MInstr
-
 object RV64MInstr extends HasInstrType with CoreParameter {
 
   def MULW  = BitPat("b0000001_?????_?????_000_?????_0111011")
+  
   def DIVW  = BitPat("b0000001_?????_?????_100_?????_0111011")
   def DIVUW = BitPat("b0000001_?????_?????_101_?????_0111011")
   def REMW  = BitPat("b0000001_?????_?????_110_?????_0111011")
@@ -549,6 +550,7 @@ object RV64MInstr extends HasInstrType with CoreParameter {
   val table = Array(
 
     MULW  -> List(InstrR, FuType.mdu, MDUOpType.mulw),
+    
     DIVW  -> List(InstrR, FuType.mdu, MDUOpType.divw),
     DIVUW -> List(InstrR, FuType.mdu, MDUOpType.divuw),
     REMW  -> List(InstrR, FuType.mdu, MDUOpType.remw),
@@ -568,6 +570,8 @@ object RVIInstr extends CoreParameter {
 ```
 
 模仿之前的 `RV32I_ALUInstr` 和 `RV64IInstr` 写就可以了，注意检查一下不要抄错 RISC-V 手册。
+
+这里这样搞其实命名就不太对，应该把 `RVIInstr` 改成 `RVInstr`，不过这个地方改了还得改后面的 `Decoder.scala`，有点麻烦且无伤大雅就没改。
 
 `playground/src/defines/Bundles.scala`：
 
@@ -720,7 +724,7 @@ class Mdu extends Module {
 1. 除法的除数为 $0$ 时，需要让商为整型最大值，余数为被除数。
 2. 有符号取余要通过被除数 $-$ 商 $\times$ 除数实现。
 
-我觉得这个部分的测试应该不是很强，大概率写的代码还有问题，但是问题可以先交给以后的我！
+我觉得这个部分的测试应该不是很强，大概率写的代码还有问题，但是问题可以先交给以后的我！~~估计乘除法部分后面也不太会有测试。~~
 
 ## Lab3 - report
 
@@ -729,3 +733,4 @@ class Mdu extends Module {
 ## Lab3 - Thinking & Exploration
 
 鸽。
+
