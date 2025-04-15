@@ -16,6 +16,8 @@ class Fu extends Module {
     }
 
     val dataSram = new DataSram()
+    // LAB5: Fu New Output : ftcInfo
+    val ftcInfo  = Output(new FetchInfo())
   })
 
   // val alu = Module(new Alu()).io
@@ -24,6 +26,9 @@ class Fu extends Module {
   io.dataSram.addr  := DontCare
   io.dataSram.wdata := DontCare
   io.dataSram.wen   := 0.U
+
+  io.ftcInfo.branch := 0.U
+  io.ftcInfo.target := 0.U
 
   // alu.info     := io.data.info
   // alu.src_info := io.data.src_info
@@ -51,7 +56,16 @@ class Fu extends Module {
       val lsu = Module(new Lsu()).io
       lsu.info     := io.data.info
       lsu.src_info := io.data.src_info
-      io.dataSram  <> lsu.dataSram 
+      lsu.dataSram <> io.dataSram
+    }
+    // LAB5: New FU : BRU
+    is (FuType.bru) {
+      val bru = Module(new Bru()).io
+      bru.info     := io.data.info
+      bru.src_info := io.data.src_info
+      bru.pc       := io.data.pc
+      io.ftcInfo   := bru.ftcInfo
+      res          := bru.result
     }
   }
   io.data.rd_info.wdata := res

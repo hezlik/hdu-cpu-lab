@@ -734,3 +734,27 @@ class Mdu extends Module {
 
 鸽。
 
+## Lab4 - Code
+
+鸽。
+
+## Lab4 - report
+
+鸽。
+
+## Lab4 - Thinking & Exploration
+
+鸽。
+
+## Lab5 - Code
+
+鸽。
+
+## Lab5 - report
+
+鸽。
+
+## Lab5 - Thinking & Exploration
+
+鸽。
+

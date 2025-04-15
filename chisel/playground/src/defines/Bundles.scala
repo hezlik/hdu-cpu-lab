@@ -12,6 +12,12 @@ class ExtInterrupt extends Bundle {
   val msi = Bool()
 }
 
+// LAB5: FetchInfo
+class FetchInfo extends Bundle{
+  val branch = Bool()
+  val target = UInt(XLEN.W)
+}
+
 class SrcInfo extends Bundle {
   val src1_data = UInt(XLEN.W)
   val src2_data = UInt(XLEN.W)

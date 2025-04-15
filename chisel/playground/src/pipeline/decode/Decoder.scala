@@ -45,9 +45,12 @@ class Decoder extends Module with HasInstrType {
   // LAB2: Decoder
   io.out.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
   io.out.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
-  io.out.info.src1_pcen  := inst === BitPat("b????????????????????_?????_0010111")
+  // io.out.info.src1_pcen  := inst === BitPat("b????????????????????_?????_0010111")
 
-  // LAB2: Decoder : imm
+  // LAB5: Decoder : src1_pcen
+  io.out.info.src1_pcen  := (inst === BitPat("b????????????????????_?????_0010111")) || (instrType === InstrJ)
+
+  // LAB2: Decoder : imm : InstrI & InstrU
   val imm = Wire(UInt(XLEN.W))
   imm := 0.U
   switch (instrType) {
@@ -63,6 +66,15 @@ class Decoder extends Module with HasInstrType {
     is (InstrS) {
       val imm12 = Cat(inst(31, 25), inst(11, 7))
       imm := Cat(Fill(54, imm12(11)), imm12)
+    }
+    // LAB5: Decoder : imm : InstrB & InstrJ
+    is (InstrB) {
+      val imm13 = Cat(Cat(inst(31), inst(7)), Cat(inst(30, 25), inst(11, 8))) << 1
+      imm := Cat(Fill(53, imm13(12)), imm13)
+    }
+    is (InstrJ) {
+      val imm21 = Cat(Cat(inst(31), inst(19, 12)), Cat(inst(20), inst(30 ,21))) << 1
+      imm := Cat(Fill(43, imm21(20)), imm21)
     }
   }
   io.out.info.imm := imm

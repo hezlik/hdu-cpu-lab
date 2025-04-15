@@ -12,6 +12,8 @@ class ExecuteUnit extends Module {
     val executeStage = Input(new DecodeUnitExecuteUnit())
     val memoryStage  = Output(new ExecuteUnitMemoryUnit())
     val dataSram     = new DataSram()
+    // LAB5: ExecuteUnit New Output : ftcInfo
+    val ftcInfo      = Output(new FetchInfo())
   })
 
   // 执行阶段完成指令的执行操作
@@ -34,5 +36,7 @@ class ExecuteUnit extends Module {
   io.memoryStage.data.info     := fu.data.info
   io.memoryStage.data.src_info := fu.data.src_info
   io.memoryStage.data.rd_info  := fu.data.rd_info
-  
+
+  // LAB5: ExecuteUnit : ftcInfo
+  io.ftcInfo <> fu.ftcInfo
 }
