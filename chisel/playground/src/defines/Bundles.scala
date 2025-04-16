@@ -13,7 +13,7 @@ class ExtInterrupt extends Bundle {
 }
 
 // LAB5: FetchInfo
-class FetchInfo extends Bundle{
+class FetchInfo extends Bundle {
   val branch = Bool()
   val target = UInt(XLEN.W)
 }

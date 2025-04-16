@@ -986,7 +986,274 @@ class Lsu extends Module {
 
 ## Lab5 - Code
 
-鸽。
+`playground/src/defines/isa/Instructions.scala`：
+
+```scala
+// LAB5: FuType
+object FuType {
+  def num     = 4
+  def alu     = 0.U
+  def mdu     = 1.U
+  def lsu     = 2.U
+  def bru     = 3.U
+  def apply() = UInt(log2Up(num).W)
+}
+
+// LAB5: BRUOpType
+object BRUOpType {
+
+  def beq  = 0.U
+  def bne  = 1.U
+  def blt  = 2.U
+  def bge  = 3.U
+  def bltu = 4.U
+  def bgeu = 5.U
+  def jal  = 6.U
+  def jalr = 7.U
+
+}
+```
+
+`playground/src/defines/isa/RVI.scala`：
+
+```scala
+// LAB5: RV32I_BRUInstr
+object RV32I_BRUInstr extends HasInstrType with CoreParameter {
+
+  def BEQ  = BitPat("b???????_?????_?????_000_?????_1100011")
+  def BNE  = BitPat("b???????_?????_?????_001_?????_1100011")
+  def BLT  = BitPat("b???????_?????_?????_100_?????_1100011")
+  def BGE  = BitPat("b???????_?????_?????_101_?????_1100011")
+  def BLTU = BitPat("b???????_?????_?????_110_?????_1100011")
+  def BGEU = BitPat("b???????_?????_?????_111_?????_1100011")
+
+  def JAL  = BitPat("b????????????????????_?????_1101111")
+  def JALR = BitPat("b????????????_?????_000_?????_1100111")
+
+  val table = Array(
+
+    BEQ  -> List(InstrB, FuType.bru, BRUOpType.beq),
+    BNE  -> List(InstrB, FuType.bru, BRUOpType.bne),
+    BLT  -> List(InstrB, FuType.bru, BRUOpType.blt),
+    BGE  -> List(InstrB, FuType.bru, BRUOpType.bge),
+    BLTU -> List(InstrB, FuType.bru, BRUOpType.bltu),
+    BGEU -> List(InstrB, FuType.bru, BRUOpType.bgeu),
+
+    JAL  -> List(InstrJ, FuType.bru, BRUOpType.jal),
+    JALR -> List(InstrI, FuType.bru, BRUOpType.jalr),
+
+  )
+
+}
+
+object RVIInstr extends CoreParameter {
+  val table = RV32I_ALUInstr.table ++
+    (if (XLEN == 64) RV64IInstr.table else Array.empty) ++
+    // LAB3: RVIInstr : RV32MInstr & RV64MInstr
+    RV32MInstr.table ++
+    (if (XLEN == 64) RV64MInstr.table else Array.empty) ++
+    // LAB4: RVIInstr : RV32I_LSUInstr
+    RV32I_LSUInstr.table ++
+    // LAB5: RVIInstr : RV32I_BRUInstr
+    RV32I_BRUInstr.table
+}
+```
+
+`playground/src/defines/Bundles.scala`：
+
+```scala
+// LAB5: FetchInfo
+class FetchInfo extends Bundle {
+  val branch = Bool()
+  val target = UInt(XLEN.W)
+}
+```
+
+由于要新增一条从 `ExecuteUnit` 到 `FetchUnit` 的数据通路，并且传输的数据有两个 `branch` 和 `target`，所以把这俩打包成 `Bundle` 并命名为 `FetchInfo`。
+
+`playground/src/pipeline/fetch/FetchUnit.scala`：
+
+```scala
+    // LAB5: FetchUnit New Input : ftcInfo : branch & target
+    val ftcInfo     = Input(new FetchInfo())
+
+	// LAB5: FetchUnit : update pc_next
+  when (io.ftcInfo.branch) {
+    io.instSram.addr := io.ftcInfo.target
+  }
+```
+
+由于新增了数据通路 `ftcInfo`，需要给 `FetchUnit` 新增输入通路。
+
+当执行跳转指令时，下一条指令的地址 `pc` 需要根据当前指令的的执行结果得到，所以需要根据新增数据通路 `ftcInfo` 处理。
+
+这里看到处理方式的时候就想到了中间处于 `Decode` 环节的指令怎么办的问题，然后看了文档说跳转指令后插无用指令，再看了下差分测试对应的汇编 `lab5.asm` 发现还真插了两条 `addi x0,x0,0`。
+
+这里之前还瞎写成：
+
+```scala
+  io.instSram.addr := (if (io.ftcInfo.branch == true.B) io.ftcInfo.target else pc + 4.U)
+```
+
+由于 `chisel` 里面 `==` 和 `===` 完全不是一回事，大概前者是逻辑比较而后者是电路实体比较（会生成比较电路），导致这条数据通路其实压根没用。后面 `gtkwave` 看波形图发现根本没 `ftcInfo` 这么个信号，打开生成的 `verilog` 代码也发现查找不到 `ftcInfo` 相关的电路，才知道大概是因为编译过程中被识别为无效电路优化掉了，最后发现大概是这么个情况。
+
+`playground/src/pipeline/decode/Decoder.scala`：
+
+```scala
+  // LAB5: Decoder : src1_pcen
+  io.out.info.src1_pcen  := (inst === BitPat("b????????????????????_?????_0010111")) || (instrType === InstrJ)
+
+    // LAB5: Decoder : imm : InstrB & InstrJ
+    is (InstrB) {
+      val imm13 = Cat(Cat(inst(31), inst(7)), Cat(inst(30, 25), inst(11, 8))) << 1
+      imm := Cat(Fill(53, imm13(12)), imm13)
+    }
+    is (InstrJ) {
+      val imm21 = Cat(Cat(inst(31), inst(19, 12)), Cat(inst(20), inst(30 ,21))) << 1
+      imm := Cat(Fill(43, imm21(20)), imm21)
+    }
+```
+
+这里不止 `imm` 要新增两种指令类型 `B` 型和 `J` 型，`rs1` 的来源为 `pc` 的条件 `src1_pcen` 也要新增 `J` 型指令的情况。
+
+`playground/src/pipeline/execute/ExecuteUnit.scala`：
+
+```scala
+    // LAB5: ExecuteUnit New Output : ftcInfo
+    val ftcInfo      = Output(new FetchInfo())
+
+  // LAB5: ExecuteUnit : ftcInfo
+  io.ftcInfo <> fu.ftcInfo
+```
+
+新增数据通路 `ftcInfo`，`ExecuteUnit` 负责中转。
+
+`playground/src/pipeline/execute/Fu.scala`：
+
+```scala
+    // LAB5: Fu New Output : ftcInfo
+    val ftcInfo  = Output(new FetchInfo())
+
+    // LAB5: New FU : BRU
+    is (FuType.bru) {
+      val bru = Module(new Bru()).io
+      bru.info     := io.data.info
+      bru.src_info := io.data.src_info
+      bru.pc       := io.data.pc
+      bru.ftcInfo  <> io.ftcInfo
+      res          := bru.result
+    }
+```
+
+由于新增了数据通路 `ftcInfo`，需要给 `FU` 新增输出通路。
+
+`BRU` 和 `FU` 的交互是目前最复杂的：不仅有新增的数据通路 `ftcInfo`，还有结果返回，还需要输入 `pc`。
+
+`playground/src/pipeline/execute/fu/Bru.scala`：
+
+```scala
+// LAB5: BRU Module
+
+package cpu.pipeline
+
+import chisel3._
+import chisel3.util._
+import cpu.defines._
+import cpu.defines.Const._
+
+class Bru extends Module {
+  val io = IO(new Bundle {
+    val info     = Input(new Info())
+    val src_info = Input(new SrcInfo())
+    val pc       = Input(UInt(XLEN.W))
+    val ftcInfo  = Output(new FetchInfo())
+    val result   = Output(UInt(XLEN.W))
+  })
+  
+  val valid  = io.info.valid
+  val op     = io.info.op
+  val rs     = io.src_info.src1_data
+  val rt     = io.src_info.src2_data
+  val pc     = io.pc
+  val imm    = io.info.imm
+  val new_pc = pc + imm
+
+  val branch = Wire(Bool())
+  val target = Wire(UInt(XLEN.W))
+  val res    = Wire(UInt(XLEN.W))
+
+  branch := false.B
+  target := 0.U
+  res    := 0.U
+  
+  when (valid) {
+    switch (op){
+      is (BRUOpType.beq) {
+        when (rs === rt) {
+          branch := true.B
+          target := new_pc
+        }
+      }
+      is (BRUOpType.bne) {
+        when (rs =/= rt) {
+          branch := true.B
+          target := new_pc
+        }
+      }
+      is (BRUOpType.blt) {
+        when (rs.asSInt < rt.asSInt) {
+          branch := true.B
+          target := new_pc
+        }
+      }
+      is (BRUOpType.bge) {
+        when (rs.asSInt >= rt.asSInt) {
+          branch := true.B
+          target := new_pc
+        }
+      }
+      is (BRUOpType.bltu) {
+        when (rs < rt) {
+          branch := true.B
+          target := new_pc
+        }
+      }
+      is (BRUOpType.bgeu) {
+        when (rs >= rt) {
+          branch := true.B
+          target := new_pc
+        }
+      }
+      is (BRUOpType.jal) {
+        branch := true.B
+        target := new_pc
+        res    := pc + 4.U
+      }
+      is (BRUOpType.jalr) {
+        branch := true.B
+        target := (rs + imm) & Cat(Fill(63,"b1".U),"b0".U)
+        res    := pc + 4.U
+      }
+    }
+  }
+
+  io.ftcInfo.branch := branch
+  io.ftcInfo.target := target
+  io.result         := res
+
+}
+```
+
+对着 RISC-V 手册写就好了，这里没有什么难点。
+
+`playground/src/Core.scala`：
+
+```scala
+  // LAB5: FetchUnit
+  executeUnit.ftcInfo <> fetchUnit.ftcInfo
+```
+
+这里需要新增一条数据通路，即将 `ftcInfo` 从 `ExecuteUnit` 传入 `FetchUnit`。
 
 ## Lab5 - report
 

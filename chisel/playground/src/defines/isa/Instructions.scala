@@ -116,7 +116,7 @@ object LSUOpType {
 
 }
 
-//LAB5: BRUOpType
+// LAB5: BRUOpType
 object BRUOpType {
 
   def beq  = 0.U
