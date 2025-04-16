@@ -6,6 +6,8 @@ https://code.educoder.net/ppg69fuwb/riscv-lab
 
 ## Lab1 - Code
 
+每一个地方的修改有对应 LABx 的注释，可以利用 TODO Tree 快速定位查看。
+
 `playground/src/defines/isa/Instructions.scala`：
 
 ```scala
@@ -52,7 +54,7 @@ https://code.educoder.net/ppg69fuwb/riscv-lab
     SUBW -> List(InstrR, FuType.alu, ALUOpType.subw),
 ```
 
-这个地方实际上最后会有将所有指令列表连接成一张总表：
+这个地方实际上最后会将所有指令列表连接成一张总表：
 
 ```scala
 object RVIInstr extends CoreParameter {
@@ -148,7 +150,9 @@ object RVIInstr extends CoreParameter {
   }
 
   val res = Wire(UInt(XLEN.W))
-  res := rs + rt
+
+  res := 0.U
+
   when (valid) {
     switch (op) {
       is (ALUOpType. add) { res := rs + rt }
@@ -168,6 +172,7 @@ object RVIInstr extends CoreParameter {
       is (ALUOpType.sraw) { res := W((rs.asSInt >> rt(5, 0)).asUInt) }
     }
   }
+
   io.result := res
 ```
 
@@ -198,6 +203,8 @@ object RVIInstr extends CoreParameter {
 ```
 
 各个 `Stage` 的作用就是暂存后传一下 `data`，很容易的。
+
+注意这里的 `data` 是寄存器类型，这样才能实现时钟控制流水线。
 
 `playground/src/pipeline/writeback/WriteBackStage.scala`：
 
@@ -441,9 +448,9 @@ lab2 开始这个部分改回 `regs(i) = 0`。
 
 2. 观察表 9-7 中指令的 `imm` 字段，为什么 `imm` 字段的长度被设计为 `20` 位？请问这样设计可以和哪些指令搭配使用并发挥什么样的效果？
 
-   `U` 型指令的 $20$ 位高位立即数（`31:12` 位）和 `I` 型指令的 $12$ 位低位立即数（`12:0` 位）可以配合起来实现 `32` 位立即数的功能。
+   `U` 型指令的 $20$ 位高位立即数（`31:12` 位）和 `I` 型指令的 $12$ 位低位立即数（`11:0` 位）可以配合起来实现 `32` 位立即数的功能。
 
-   具体而言，如果我想实现对 `x1` 寄存器加 $32$ 位立即数 `imm`，那么 RISC-V 汇编指令中应该这么写：
+   具体而言，如果想实现对 `x1` 寄存器加 $32$ 位立即数 `imm`，那么 RISC-V 汇编指令中应该这么写：
 
    ```assembly
    lui x2,imm[31:12]
@@ -594,9 +601,11 @@ object RVIInstr extends CoreParameter {
 `playground/src/pipeline/execute/Fu.scala`：
 
 ```scala
-  // LAB3: Reconstruct Logic of Fu
+	// LAB3: Reconstruct Logic of FU
   val res = Wire(UInt(XLEN.W))
+
   res := 0.U
+  
   switch (io.data.info.fusel) {
     is (FuType.alu) {
       val alu = Module(new Alu()).io
@@ -611,10 +620,13 @@ object RVIInstr extends CoreParameter {
       res          := mdu.result
     }
   }
+
   io.data.rd_info.wdata := res
 ```
 
 此时需要在 `Fu.scala` 中实现按照 `fusel` 选择对应 `FU` 部件的功能。
+
+这里注意到一个事情，我们没有在这里处理 `io.data.info.valid` 的事情，事实上在电路中只要有任意一层处理 `valid` 就行了，因为任意一层断路都可以做到让这个电信号传不到 `ExecuteUnit`。这里将 `valid` 的处理直接丢给了底层的 `LU` 分部件（即 `ALU` 之类的）。
 
 `playground/src/pipeline/execute/fu/Mdu.scala`：
 
@@ -646,7 +658,9 @@ class Mdu extends Module {
   }
 
   val res = Wire(UInt(XLEN.W))
-  res := rs * rt
+
+  res := 0.U
+
   when (valid) {
     switch (op) {
       is (MDUOpType.   mul) { res := rs * rt }
@@ -712,6 +726,7 @@ class Mdu extends Module {
       }
     }
   }
+  
   io.result := res
 
 }
@@ -736,7 +751,230 @@ class Mdu extends Module {
 
 ## Lab4 - Code
 
-鸽。
+`playground/src/defines/isa/Instructions.scala`：
+
+```scala
+// LAB4: FuType
+object FuType {
+  def num     = 3
+  def alu     = 0.U
+  def mdu     = 1.U
+  def lsu     = 2.U
+  def apply() = UInt(log2Up(num).W)
+}
+
+// LAB4: LSUOpType
+object LSUOpType {
+
+  def lb  = 0.U
+  def lh  = 1.U
+  def lw  = 2.U
+  def ld  = 3.U
+  def lbu = 4.U
+  def lhu = 5.U
+  def lwu = 6.U
+  def sb  = 7.U
+  def sh  = 8.U
+  def sw  = 9.U
+  def sd  = 10.U
+
+}
+```
+
+`playground/src/defines/isa/RVI.scala`：
+
+```scala
+// LAB4: RV32I_LSUInstr
+object RV32I_LSUInstr extends HasInstrType with CoreParameter {
+  
+  def LB  = BitPat("b????????????_?????_000_?????_0000011")
+  def LH  = BitPat("b????????????_?????_001_?????_0000011")
+  def LW  = BitPat("b????????????_?????_010_?????_0000011")
+  def LD  = BitPat("b????????????_?????_011_?????_0000011")
+  def LBU = BitPat("b????????????_?????_100_?????_0000011")
+  def LHU = BitPat("b????????????_?????_101_?????_0000011")
+  def LWU = BitPat("b????????????_?????_110_?????_0000011")
+
+  def SB  = BitPat("b???????_?????_?????_000_?????_0100011")
+  def SH  = BitPat("b???????_?????_?????_001_?????_0100011")
+  def SW  = BitPat("b???????_?????_?????_010_?????_0100011")
+  def SD  = BitPat("b???????_?????_?????_011_?????_0100011")
+
+  val table = Array(
+
+    LB  -> List(InstrI, FuType.lsu, LSUOpType.lb),
+    LH  -> List(InstrI, FuType.lsu, LSUOpType.lh),
+    LW  -> List(InstrI, FuType.lsu, LSUOpType.lw),
+    LD  -> List(InstrI, FuType.lsu, LSUOpType.ld),
+    LBU -> List(InstrI, FuType.lsu, LSUOpType.lbu),
+    LHU -> List(InstrI, FuType.lsu, LSUOpType.lhu),
+    LWU -> List(InstrI, FuType.lsu, LSUOpType.lwu),
+
+    SB  -> List(InstrS, FuType.lsu, LSUOpType.sb),
+    SH  -> List(InstrS, FuType.lsu, LSUOpType.sh),
+    SW  -> List(InstrS, FuType.lsu, LSUOpType.sw),
+    SD  -> List(InstrS, FuType.lsu, LSUOpType.sd),
+
+  )
+
+}
+
+object RVIInstr extends CoreParameter {
+  val table = RV32I_ALUInstr.table ++
+    (if (XLEN == 64) RV64IInstr.table else Array.empty) ++
+    // LAB3: RVIInstr : RV32MInstr & RV64MInstr
+    RV32MInstr.table ++
+    (if (XLEN == 64) RV64MInstr.table else Array.empty) ++
+    // LAB4: RVIInstr : RV32I_LSUInstr
+    RV32I_LSUInstr.table
+}
+```
+
+`playground/src/pipeline/decode/Decoder.scala`：
+
+```scala
+    // LAB4: Decoder : imm : InstrS
+    is (InstrS) {
+      val imm12 = Cat(inst(31, 25), inst(11, 7))
+      imm := Cat(Fill(54, imm12(11)), imm12)
+    }
+```
+
+`Decoder` 中对立即数 `imm` 的解析增加 `S` 型指令。
+
+`playground/src/pipeline/execute/Fu.scala`：
+
+```scala
+    // LAB4: New FU : LSU
+    is (FuType.lsu) {
+      val lsu = Module(new Lsu()).io
+      lsu.info     := io.data.info
+      lsu.src_info := io.data.src_info
+      lsu.dataSram <> io.dataSram
+    }
+```
+
+新增部件 `LSU`，注意这里的电路连接与之前的 `ALU` 和 `MDU` 并不完全相同，`LSU` 不返回结果 `result`，但需要接入 `dataSram`。
+
+`playground/src/pipeline/execute/fu/Lsu.scala`：
+
+```scala
+// LAB4: LSU Module in Execute for Storage
+
+package cpu.pipeline
+
+import chisel3._
+import chisel3.util._
+import cpu.defines._
+import cpu.defines.Const._
+
+class Lsu extends Module {
+  val io = IO(new Bundle {
+    val info     = Input(new Info())
+    val src_info = Input(new SrcInfo())
+    val dataSram = new DataSram()
+  })
+
+  val valid = io.info.valid
+  val op    = io.info.op
+  val rt    = io.src_info.src2_data
+  val is_s  = io.info.src2_ren
+  val addr  = io.src_info.src1_data + io.info.imm
+
+  val wen   = Wire(UInt(DATA_SRAM_WEN_WID.W))
+  val wdata = Wire(UInt(DATA_SRAM_DATA_WID.W))
+
+  wen   := 0.U
+  wdata := 0.U
+
+  when (valid && is_s) {
+    switch (op) {
+      is (LSUOpType.sb) {
+        wen   := "b0000_0001".U << addr(2, 0)
+        wdata := Fill(8, rt(7, 0))
+      }
+      is (LSUOpType.sh) {
+        wen   := "b0000_0011".U << addr(2, 0)
+        wdata := Fill(4, rt(15, 0))
+      }
+      is (LSUOpType.sw) {
+        wen   := "b0000_1111".U << addr(2, 0)
+        wdata := Fill(2, rt(31, 0))
+      }
+      is (LSUOpType.sd) {
+        wen   := "b1111_1111".U << addr(2, 0)
+        wdata := Fill(1, rt(63, 0))
+      }
+    }
+  }
+
+  io.dataSram.en    := !reset.asBool
+  io.dataSram.wen   := wen
+  io.dataSram.addr  := addr
+  io.dataSram.wdata := wdata
+
+}
+```
+
+实现和数据存储器 `DataMEM` 及其接口 `DataSram` 交互的 `FU` 部件 `LSU`，这里主要实现存数部分的功能。
+
+这个部分要细致阅读文档中关于 `wen` 和 `wdata` 的设置问题，不然会挂的很惨。
+
+`playground/src/pipeline/memory/MemoryUnit.scala`：
+
+```scala
+    // LAB4: MemoryUnit : Input loadData
+    val loadData       = Input(UInt(XLEN.W))
+
+	// LAB4: MemoryUnit : Finish Load
+  val data  = io.memoryStage.data
+
+  val valid = data.info.valid
+  val fusel = data.info.fusel
+  val is_l  = !data.info.src2_ren
+  val op    = data.info.op
+  val addr  = data.src_info.src1_data + data.info.imm
+  val rdata = io.loadData >> (addr(2, 0) * 8.U)
+
+  val res   = Wire(UInt(XLEN.W))
+  
+  res := data.rd_info.wdata
+
+  when (valid && fusel === FuType.lsu && is_l) {
+    switch (op) {
+      is (LSUOpType. lb) { res := Cat(Fill(56, rdata( 7)), rdata( 7, 0)) }
+      is (LSUOpType. lh) { res := Cat(Fill(48, rdata(15)), rdata(15, 0)) }
+      is (LSUOpType. lw) { res := Cat(Fill(32, rdata(31)), rdata(31, 0)) }
+      is (LSUOpType. ld) { res := rdata }
+      is (LSUOpType.lbu) { res := rdata( 7, 0) }
+      is (LSUOpType.lhu) { res := rdata(15, 0) }
+      is (LSUOpType.lwu) { res := rdata(31, 0) }
+    }
+  }
+  
+  io.writeBackStage.data.rd_info.wdata := res
+```
+
+实现和数据存储器 `DataMEM` 以及其接口 `DataSram` 交互的 `FU` 部件 `LSU`，这里主要实现取数部分的功能。
+
+这里实际上应该多实现一个 `LSU.scala`，但是 `MemoryUnit.scala` 里好像也没实现啥其它很多功能就直接塞进里面了。
+
+由于这个部分实际上不需要往数据存储器 `DataMEM` 及其接口 `DataSram` 写入，所以直接在 `core` 里把 `wdata` 丢进来就行了，这里被重命名成了 `loadData`。
+
+同样的，这个部分要细致阅读文档中关于 `wdata` 的设置问题，不然会挂的很惨。
+
+`playground/src/Core.scala`：
+
+```scala
+	// LAB4: Memory
+  memoryUnit.loadData := io.dataSram.rdata
+```
+
+这里需要新增一条数据通路，即将 `wdata` 传入 `MemoryUnit`。
+
+这个部分其实考虑了好久，因为之前一直在用程序设计语言的思路考虑这个传输，但实际上这是电路，只要保证有一条数据通路可以把 `wdata` 从 `ExecuteUnit` 里接到 `MemoryUnit` 里就可以了。
+
+但是要注意一点，这条数据通路上不能有额外的寄存器，因为取数时数据存储器 `DataMEM` 里自带一个时钟的延迟，所以这个 `wdata` 不能接入 `MemoryStage` 而要直连 `MemoryUnit`。
 
 ## Lab4 - report
 
