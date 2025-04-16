@@ -14,32 +14,42 @@ class Lsu extends Module {
     val dataSram = new DataSram()
   })
 
-  io.dataSram.en    := !reset.asBool
-  io.dataSram.wen   := 0.U
-  io.dataSram.addr  := io.src_info.src1_data + io.info.imm
-  io.dataSram.wdata := 0.U
+  val valid = io.info.valid
+  val op    = io.info.op
+  val rt    = io.src_info.src2_data
+  val is_s  = io.info.src2_ren
+  val addr  = io.src_info.src1_data + io.info.imm
 
-  when (io.info.valid && io.info.src2_ren) {
-    val rt   = io.src_info.src2_data
-    val addr = io.dataSram.addr
-    switch (io.info.op) {
+  val wen   = Wire(UInt(DATA_SRAM_WEN_WID.W))
+  val wdata = Wire(UInt(DATA_SRAM_DATA_WID.W))
+
+  wen   := 0.U
+  wdata := 0.U
+
+  when (valid && is_s) {
+    switch (op) {
       is (LSUOpType.sb) {
-        io.dataSram.wen   := "b0000_0001".U << addr(2, 0)
-        io.dataSram.wdata := Fill(8, rt(7, 0))
+        wen   := "b0000_0001".U << addr(2, 0)
+        wdata := Fill(8, rt(7, 0))
       }
       is (LSUOpType.sh) {
-        io.dataSram.wen   := "b0000_0011".U << addr(2, 0)
-        io.dataSram.wdata := Fill(4, rt(15, 0))
+        wen   := "b0000_0011".U << addr(2, 0)
+        wdata := Fill(4, rt(15, 0))
       }
       is (LSUOpType.sw) {
-        io.dataSram.wen   := "b0000_1111".U << addr(2, 0)
-        io.dataSram.wdata := Fill(2, rt(31, 0))
+        wen   := "b0000_1111".U << addr(2, 0)
+        wdata := Fill(2, rt(31, 0))
       }
       is (LSUOpType.sd) {
-        io.dataSram.wen   := "b1111_1111".U << addr(2, 0)
-        io.dataSram.wdata := Fill(1, rt(63, 0))
+        wen   := "b1111_1111".U << addr(2, 0)
+        wdata := Fill(1, rt(63, 0))
       }
     }
   }
+
+  io.dataSram.en    := !reset.asBool
+  io.dataSram.wen   := wen
+  io.dataSram.addr  := addr
+  io.dataSram.wdata := wdata
 
 }

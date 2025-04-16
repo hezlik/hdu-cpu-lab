@@ -23,25 +23,31 @@ class MemoryUnit extends Module {
   io.writeBackStage.data.rd_info.wdata             := io.memoryStage.data.rd_info.wdata
 
   // LAB4: MemoryUnit : Finish Load
+  val data  = io.memoryStage.data
 
-  val info     = io.memoryStage.data.info
-  val src_info = io.memoryStage.data.src_info
+  val valid = data.info.valid
+  val fusel = data.info.fusel
+  val is_l  = !data.info.src2_ren
+  val op    = data.info.op
+  val addr  = data.src_info.src1_data + data.info.imm
+  val rdata = io.loadData >> (addr(2, 0) * 8.U)
 
-  when (info.valid && info.fusel === FuType.lsu && !info.src2_ren) {
-    val addr  = src_info.src1_data + info.imm
-    val rdata = io.loadData >> (addr(2, 0) * 8.U)
-    val res   = Wire(UInt(XLEN.W))
-    res := 0.U
-    switch (info.op) {
-      is (LSUOpType. lb) { res := Cat(Fill(56, rdata(7)), rdata(7, 0)) }
+  val res   = Wire(UInt(XLEN.W))
+  
+  res := data.rd_info.wdata
+
+  when (valid && fusel === FuType.lsu && is_l) {
+    switch (op) {
+      is (LSUOpType. lb) { res := Cat(Fill(56, rdata( 7)), rdata( 7, 0)) }
       is (LSUOpType. lh) { res := Cat(Fill(48, rdata(15)), rdata(15, 0)) }
       is (LSUOpType. lw) { res := Cat(Fill(32, rdata(31)), rdata(31, 0)) }
       is (LSUOpType. ld) { res := rdata }
-      is (LSUOpType.lbu) { res := rdata(7, 0) }
+      is (LSUOpType.lbu) { res := rdata( 7, 0) }
       is (LSUOpType.lhu) { res := rdata(15, 0) }
       is (LSUOpType.lwu) { res := rdata(31, 0) }
     }
-    io.writeBackStage.data.rd_info.wdata := res
   }
+  
+  io.writeBackStage.data.rd_info.wdata := res
 
 }

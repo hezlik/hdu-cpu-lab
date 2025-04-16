@@ -39,4 +39,5 @@ class ExecuteUnit extends Module {
 
   // LAB5: ExecuteUnit : ftcInfo
   io.ftcInfo <> fu.ftcInfo
+  
 }

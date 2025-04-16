@@ -37,7 +37,9 @@ class Fu extends Module {
 
   // LAB3: Reconstruct Logic of FU
   val res = Wire(UInt(XLEN.W))
+
   res := 0.U
+  
   switch (io.data.info.fusel) {
     is (FuType.alu) {
       val alu = Module(new Alu()).io
@@ -64,10 +66,11 @@ class Fu extends Module {
       bru.info     := io.data.info
       bru.src_info := io.data.src_info
       bru.pc       := io.data.pc
-      io.ftcInfo   := bru.ftcInfo
+      bru.ftcInfo  <> io.ftcInfo
       res          := bru.result
     }
   }
+
   io.data.rd_info.wdata := res
 
 }

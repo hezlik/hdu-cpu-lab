@@ -25,7 +25,9 @@ class Mdu extends Module {
   }
 
   val res = Wire(UInt(XLEN.W))
-  res := rs * rt
+
+  res := 0.U
+
   when (valid) {
     switch (op) {
       is (MDUOpType.   mul) { res := rs * rt }
@@ -91,6 +93,7 @@ class Mdu extends Module {
       }
     }
   }
+  
   io.result := res
 
 }

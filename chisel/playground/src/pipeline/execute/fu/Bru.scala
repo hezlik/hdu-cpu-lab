@@ -1,4 +1,4 @@
-// LAB4: BRU Module
+// LAB5: BRU Module
 
 package cpu.pipeline
 
@@ -15,6 +15,14 @@ class Bru extends Module {
     val ftcInfo  = Output(new FetchInfo())
     val result   = Output(UInt(XLEN.W))
   })
+  
+  val valid  = io.info.valid
+  val op     = io.info.op
+  val rs     = io.src_info.src1_data
+  val rt     = io.src_info.src2_data
+  val pc     = io.pc
+  val imm    = io.info.imm
+  val new_pc = pc + imm
 
   val branch = Wire(Bool())
   val target = Wire(UInt(XLEN.W))
@@ -24,15 +32,8 @@ class Bru extends Module {
   target := 0.U
   res    := 0.U
   
-  when (io.info.valid) {
-    
-    val rs     = io.src_info.src1_data
-    val rt     = io.src_info.src2_data
-    val pc     = io.pc
-    val imm    = io.info.imm
-    val new_pc = pc + imm
-
-    switch (io.info.op){
+  when (valid) {
+    switch (op){
       is (BRUOpType.beq) {
         when (rs === rt) {
           branch := true.B
@@ -75,15 +76,14 @@ class Bru extends Module {
       is (BRUOpType.jal) {
         branch := true.B
         target := new_pc
-        res := pc + 4.U
+        res    := pc + 4.U
       }
       is (BRUOpType.jalr) {
         branch := true.B
         target := (rs + imm) & Cat(Fill(63,"b1".U),"b0".U)
-        res := pc + 4.U
+        res    := pc + 4.U
       }
     }
-
   }
 
   io.ftcInfo.branch := branch

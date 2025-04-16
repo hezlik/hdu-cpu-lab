@@ -34,7 +34,7 @@ class Core extends Module {
   // 在该模块中，需要将各个模块连接起来，形成一个完整的CPU核心
 
   // LAB5: FetchUnit
-  fetchUnit.ftcInfo := executeUnit.ftcInfo
+  executeUnit.ftcInfo <> fetchUnit.ftcInfo
 
   // LAB1: Decode
   decodeStage.decodeUnit <> decodeUnit.decodeStage

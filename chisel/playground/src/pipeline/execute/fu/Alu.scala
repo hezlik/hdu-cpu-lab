@@ -25,7 +25,9 @@ class Alu extends Module {
   }
 
   val res = Wire(UInt(XLEN.W))
-  res := rs + rt
+
+  res := 0.U
+
   when (valid) {
     switch (op) {
       is (ALUOpType. add) { res := rs + rt }
@@ -52,6 +54,7 @@ class Alu extends Module {
       is (ALUOpType.sraw) { res := W((rs(31, 0).asSInt >> rt(4, 0)).asUInt) }
     }
   }
+
   io.result := res
 
 }
