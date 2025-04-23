@@ -38,9 +38,6 @@ class Bru extends Module {
         when (rs === rt) {
           branch := true.B
           target := new_pc
-          // print("       114514        \n\n")
-          // print(io.ftcInfo.branch)
-          // print(io.ftcInfo.target)
         }
       }
       is (BRUOpType.bne) {

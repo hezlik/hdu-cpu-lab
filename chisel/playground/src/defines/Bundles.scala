@@ -12,6 +12,12 @@ class ExtInterrupt extends Bundle {
   val msi = Bool()
 }
 
+// LAB6: CtrlSignal
+class CtrlSignal extends Bundle {
+  val allow_to_go = Bool()
+  val do_flush    = Bool()
+}
+
 // LAB5: FetchInfo
 class FetchInfo extends Bundle {
   val branch = Bool()

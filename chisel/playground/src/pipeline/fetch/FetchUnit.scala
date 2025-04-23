@@ -12,6 +12,8 @@ class FetchUnit extends Module {
     val instSram    = new InstSram()
     // LAB5: FetchUnit New Input : ftcInfo : branch & target
     val ftcInfo     = Input(new FetchInfo())
+    // LAB6: New Input : fetchCtrlSignal
+    val fetchCtrlSignal = Input(new CtrlSignal())
   })
 
   val boot :: send :: receive :: Nil = Enum(3)
@@ -33,6 +35,11 @@ class FetchUnit extends Module {
 
   io.instSram.addr := pc + 4.U
 
+  // LAB6: fetchCtrlSignal
+  when (!io.fetchCtrlSignal.allow_to_go) {
+    io.instSram.addr := pc
+  }
+
   // LAB5: FetchUnit : update pc_next
   when (io.ftcInfo.branch) {
     io.instSram.addr := io.ftcInfo.target
@@ -45,4 +52,5 @@ class FetchUnit extends Module {
   io.instSram.en    := !reset.asBool
   io.instSram.wen   := 0.U
   io.instSram.wdata := 0.U
+  
 }
