@@ -413,6 +413,8 @@ lab2 开始这个部分改回 `regs(i) = 0`。
   io.executeStage.data.src_info.src2_data := MuxCase(info.imm, src2_table)
 ```
 
+通过多路选择器得到 `src1_data` 和 `src2_data`，从而实现 `ALU` 部件的复用。
+
 这里使用多路选择器处理选择读寄存器、`pc`、立即数还是 `0`，估计后面还得接着加。
 
 `playground/src/pipeline/execute/fu/Alu.scala`：
@@ -1263,3 +1265,181 @@ class Bru extends Module {
 
 鸽。
 
+## Lab6 - Code
+
+`playground/src/defines/Bundles.scala`：
+
+```scala
+// LAB6: CtrlSignal
+class CtrlSignal extends Bundle {
+  val allow_to_go = Bool()
+  val do_flush    = Bool()
+}
+```
+
+把数据缓存的更新信号 `allow_to_go` 和清空信号 `do_flush` 打包。
+
+`playground/src/pipeline/fetch/FetchUnit.scala`：
+
+```scala
+    // LAB6: New Input : fetchCtrlSignal
+    val fetchCtrlSignal = Input(new CtrlSignal())
+
+  // LAB6: fetchCtrlSignal
+  when (!io.fetchCtrlSignal.allow_to_go) {
+    io.instSram.addr := pc
+  }
+```
+
+用 `fetchUnit` 的控制信号 `fetchCtrlSignal` 控制 `PC` 更新，`allow_to_go` 不准走就不许更新 `PC`。
+
+`playground/src/pipeline/decode/DecodeStage.scala`：
+
+```scala
+    // LAB6: New Input : fetchCtrlSignal
+    val fetchCtrlSignal = Input(new CtrlSignal())
+
+  // LAB6: fetchCtrlSignal
+  when (io.fetchCtrlSignal.allow_to_go) { data := io.fetchUnit.data }
+  when (io.fetchCtrlSignal.do_flush) { data.valid := false.B }
+```
+
+用 `fetchUnit` 的控制信号 `fetchCtrlSignal` 控制 `decodeStage` 中的数据缓存的更新和清空。
+
+清空可以直接使用 `valid := 0` 来实现，指令无效化就相当于清空指令。
+
+后续的几个控制也是一样的。
+
+`playground/src/pipeline/execute/ExecuteStage.scala`：
+
+```scala
+    // LAB6: New Input : decodeCtrlSignal
+    val decodeCtrlSignal = Input(new CtrlSignal())
+
+	// LAB6: decodeCtrlSignal
+  when (io.decodeCtrlSignal.allow_to_go) { data := io.decodeUnit.data }
+  when (io.decodeCtrlSignal.do_flush) { data.info.valid := false.B }
+```
+
+`playground/src/pipeline/memory/MemoryStage.scala`：
+
+```scala
+    // LAB6: New Input : executeCtrlSignal
+    val executeCtrlSignal = Input(new CtrlSignal())
+
+  // LAB6: executeCtrlSignal
+  when (io.executeCtrlSignal.allow_to_go) { data := io.executeUnit.data }
+  when (io.executeCtrlSignal.do_flush) { data.info.valid := false.B }
+```
+
+`playground/src/pipeline/writeback/WriteBackStage.scala`：
+
+```scala
+    // LAB6: New Input : memoryCtrlSignal
+    val memoryCtrlSignal = Input(new CtrlSignal())
+
+  // LAB6: memoryCtrlSignal
+  when (io.memoryCtrlSignal.allow_to_go) { data := io.memoryUnit.data }
+  when (io.memoryCtrlSignal.do_flush) { data.info.valid := false.B }
+```
+
+`playground/src/Core.scala`：
+
+```scala
+  // LAB6: Ctrl
+  val fetchCtrlSignal   = Wire(new CtrlSignal())
+  val decodeCtrlSignal  = Wire(new CtrlSignal())
+  val executeCtrlSignal = Wire(new CtrlSignal())
+  val memoryCtrlSignal  = Wire(new CtrlSignal())
+
+  val f_allow           = Wire(Bool())
+  val d_allow           = Wire(Bool())
+  val e_allow           = Wire(Bool())
+  val m_allow           = Wire(Bool())
+
+  val f_flush           = Wire(Bool())
+  val d_flush           = Wire(Bool())
+  val e_flush           = Wire(Bool())
+  val m_flush           = Wire(Bool())
+
+  val ftcInfo           = executeUnit.ftcInfo
+  val d_info            = decodeUnit.executeStage.data.info
+  val e_info            = executeUnit.memoryStage.data.info
+  val m_info            = memoryUnit.writeBackStage.data.info
+  val w_info            = writeBackUnit.writeBackStage.data.info
+
+  f_allow := true.B
+  f_flush := ftcInfo.branch
+
+  val e_conflict =
+    e_info.valid && e_info.reg_wen && e_info.reg_waddr =/= 0.U && ((
+      d_info.src1_ren && d_info.src1_raddr === e_info.reg_waddr
+    ) || (
+      d_info.src2_ren && d_info.src2_raddr === e_info.reg_waddr
+    ))
+
+  val m_conflict =
+    m_info.valid && m_info.reg_wen && m_info.reg_waddr =/= 0.U && ((
+      d_info.src1_ren && d_info.src1_raddr === m_info.reg_waddr
+    ) || (
+      d_info.src2_ren && d_info.src2_raddr === m_info.reg_waddr
+    ))
+
+  val w_conflict =
+    w_info.valid && w_info.reg_wen && w_info.reg_waddr =/= 0.U && ((
+      d_info.src1_ren && d_info.src1_raddr === w_info.reg_waddr
+    ) || (
+      d_info.src2_ren && d_info.src2_raddr === w_info.reg_waddr
+    ))
+
+  d_allow := !e_conflict && !m_conflict && !w_conflict
+  d_flush := ftcInfo.branch
+
+  e_allow := true.B
+  e_flush := false.B
+
+  m_allow := true.B
+  m_flush := false.B
+
+  fetchCtrlSignal.allow_to_go := f_allow && d_allow
+  fetchCtrlSignal.do_flush := f_flush || (!f_allow && d_allow)
+
+  decodeCtrlSignal.allow_to_go := d_allow && e_allow
+  decodeCtrlSignal.do_flush := d_flush || (!d_allow && e_allow)
+
+  executeCtrlSignal.allow_to_go := e_allow && m_allow
+  executeCtrlSignal.do_flush := e_flush || (!e_allow && m_allow)
+
+  memoryCtrlSignal.allow_to_go := m_allow
+  memoryCtrlSignal.do_flush := m_flush
+
+  fetchCtrlSignal <> fetchUnit.fetchCtrlSignal
+  fetchCtrlSignal <> decodeStage.fetchCtrlSignal
+  decodeCtrlSignal <> executeStage.decodeCtrlSignal
+  executeCtrlSignal <> memoryStage.executeCtrlSignal
+  memoryCtrlSignal <> writeBackStage.memoryCtrlSignal
+```
+
+由于我是懒狗，直接把 `Ctrl` 集成到 `Core` 里了，本身 `Core` 在集成控制方面也有巨大优势，很多数据通路可以直接调用。
+
+先不管具体的控制信号逻辑，那么对于流水线的相邻两个层级 `x` 和 `y`，它们之间的控制信号应该有如下两种必然关系：
+
+1. `y` 的数据缓存更新被暂停了，那么 `x` 的数据传递会被 `y` 堵住，所以 `x` 也应该暂停数据缓存更新，即 `y.allow_to_go` 为 `false` 时相应的 `x.allow_to_go` 也为 `false`。
+2. `x` 的数据缓存更新被暂停了，同时 `y` 的数据缓存更新没被暂停，下一周期 `y` 没有地方获取新数据，应该要清空数据缓存，即 `x.allow_to_go` 为 `false` 且 `y.allow_to_go` 为 `true` 时相应的 `x.do_flush` 为 `true`。（这里需要注意，`allow_to_go` 是管上一层级往当前层级传递，`do_flush` 是管当前层级往下一层级传递）。
+
+除了这两种控制信号逻辑之外才有各种特化的冲突控制，所以这里对这两个部分做了分割。
+
+在五级流水线中特化的冲突控制逻辑只有两种：
+
+1. 写后读：处于 `Execute, Memory, WriteBack` 层级的指令写的寄存器和处于 `Decode` 层级的指令读的寄存器相同，此时需要暂停传递 `Decode` 层级的指令。
+2. 控制冲突：处于 `Execute` 层级的跳转指令执行后，处于`Fetch, Decode` 层级的指令不应该被执行，此时需要清空处于这两个层级的指令。
+
+具体的实现就按照文档中写。
+
+## Lab6 - report
+
+鸽。
+
+## Lab6 - Thinking & Exploration
+
+鸽。
