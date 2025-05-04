@@ -18,8 +18,8 @@ class FetchUnitDecodeUnit extends Bundle {
 
 class DecodeStage extends Module {
   val io = IO(new Bundle {
-    val fetchUnit  = Flipped(new FetchUnitDecodeUnit())
-    val decodeUnit = new FetchUnitDecodeUnit()
+    val fetchUnit   = Flipped(new FetchUnitDecodeUnit())
+    val decodeUnit  = new FetchUnitDecodeUnit()
     // LAB6: New Input : fetchCtrlSignal
     val fetchCtrlSignal = Input(new CtrlSignal())
   })

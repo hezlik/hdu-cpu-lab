@@ -19,8 +19,8 @@ class ExecuteUnitMemoryUnit extends Bundle {
 
 class MemoryStage extends Module {
   val io = IO(new Bundle {
-    val executeUnit = Input(new ExecuteUnitMemoryUnit())
-    val memoryUnit  = Output(new ExecuteUnitMemoryUnit())
+    val executeUnit  = Input(new ExecuteUnitMemoryUnit())
+    val memoryUnit   = Output(new ExecuteUnitMemoryUnit())
     // LAB6: New Input : executeCtrlSignal
     val executeCtrlSignal = Input(new CtrlSignal())
   })

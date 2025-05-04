@@ -1,32 +1,30 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Tue Apr 15 11:08:08 2025
+[*] Sun May  4 04:24:02 2025
 [*]
 [dumpfile] "/home/hezlik/riscv-lab/difftest/trace.fst"
-[dumpfile_mtime] "Tue Apr 15 11:05:06 2025"
-[dumpfile_size] 4796
+[dumpfile_mtime] "Sun May  4 04:06:56 2025"
+[dumpfile_size] 5479
 [savefile] "/home/hezlik/riscv-lab/difftest/temp.gtkw"
-[timestart] 24
-[size] 1645 814
-[pos] -1 -1
-*-2.000000 39 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 1642 814
+[pos] -101 -101
+*-4.058894 39 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.core.
 [treeopen] TOP.top.core.core.
-[treeopen] TOP.top.core.core.DecodeUnit.
-[treeopen] TOP.top.core.core.ExecuteUnit.
-[treeopen] TOP.top.core.core.ExecuteUnit.Fu.
 [sst_width] 233
-[signals_width] 512
+[signals_width] 356
 [sst_expanded] 1
 [sst_vpaned_height] 218
 @28
-TOP.clock
-@22
-TOP.top.core.core.ExecuteUnit.Fu.Bru.io_info_op[4:0]
-TOP.top.core.core.ExecuteUnit.Fu.Bru.io_pc[63:0]
-@23
-TOP.top.core.core.ExecuteUnit.Fu.Bru.io_result[63:0]
+TOP.top.core.core.DecodeCtrl.io_decodeCtrlSignal_do_flush
+TOP.top.core.core.DecodeCtrl.io_decodeCtrlSignal_allow_to_go
+TOP.top.core.core.FetchCtrl.io_fetchCtrlSignal_do_flush
+TOP.top.core.core.DecodeStage.io_fetchCtrlSignal_do_flush
+TOP.top.core.core.ExecuteStage.io_decodeCtrlSignal_do_flush
+@29
+TOP.top.core.core.ExecuteStage.io_decodeCtrlSignal_allow_to_go
 [pattern_trace] 1
 [pattern_trace] 0

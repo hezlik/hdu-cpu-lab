@@ -16,15 +16,20 @@ class Core extends Module {
   })
 
   val fetchUnit      = Module(new FetchUnit()).io
+  val fetchCtrl      = Module(new FetchCtrl()).io
   val decodeStage    = Module(new DecodeStage()).io
   val decodeUnit     = Module(new DecodeUnit()).io
+  val decodeCtrl     = Module(new DecodeCtrl()).io
   val regfile        = Module(new ARegFile()).io
   val executeStage   = Module(new ExecuteStage()).io
   val executeUnit    = Module(new ExecuteUnit()).io
+  val executeCtrl    = Module(new ExecuteCtrl()).io
   val memoryStage    = Module(new MemoryStage()).io
   val memoryUnit     = Module(new MemoryUnit()).io
+  val memoryCtrl     = Module(new MemoryCtrl()).io
   val writeBackStage = Module(new WriteBackStage()).io
   val writeBackUnit  = Module(new WriteBackUnit()).io
+  val writeBackCtrl  = Module(new WriteBackCtrl()).io
 
   // 取指单元
   fetchUnit.instSram <> io.instSram
@@ -60,77 +65,100 @@ class Core extends Module {
   // LAB1: Difftest
   writeBackUnit.debug <> io.debug
 
-  // LAB6: Ctrl
-  val fetchCtrlSignal   = Wire(new CtrlSignal())
-  val decodeCtrlSignal  = Wire(new CtrlSignal())
-  val executeCtrlSignal = Wire(new CtrlSignal())
-  val memoryCtrlSignal  = Wire(new CtrlSignal())
+  // LAB6F: Ready
+  fetchCtrl.decodeReady <> decodeCtrl.decodeReady
+  decodeCtrl.executeReady <> executeCtrl.executeReady
+  executeCtrl.memoryReady <> memoryCtrl.memoryReady
+  memoryCtrl.writeBackReady <> writeBackCtrl.writeBackReady
 
-  val f_allow           = Wire(Bool())
-  val d_allow           = Wire(Bool())
-  val e_allow           = Wire(Bool())
-  val m_allow           = Wire(Bool())
+  // LAB6F: Ctrl
+  fetchCtrl.fetchCtrlSignal <> fetchUnit.fetchCtrlSignal
+  fetchCtrl.fetchCtrlSignal <> decodeStage.fetchCtrlSignal
+  decodeCtrl.decodeCtrlSignal <> executeStage.decodeCtrlSignal
+  executeCtrl.executeCtrlSignal <> memoryStage.executeCtrlSignal
+  memoryCtrl.memoryCtrlSignal <> writeBackStage.memoryCtrlSignal
 
-  val f_flush           = Wire(Bool())
-  val d_flush           = Wire(Bool())
-  val e_flush           = Wire(Bool())
-  val m_flush           = Wire(Bool())
+  // LAB6F: Excute -> ftcInfo -> Fetch, Decode
+  fetchCtrl.ftcInfo := executeUnit.ftcInfo
+  decodeCtrl.ftcInfo := executeUnit.ftcInfo
 
-  val ftcInfo           = executeUnit.ftcInfo
-  val d_info            = decodeUnit.executeStage.data.info
-  val e_info            = executeUnit.memoryStage.data.info
-  val m_info            = memoryUnit.writeBackStage.data.info
-  val w_info            = writeBackUnit.writeBackStage.data.info
+  // LAB6F: Decode, Excute, Memory, WriteBack -> info -> Decode
+  decodeCtrl.decodeInfo := decodeUnit.executeStage.data.info
+  decodeCtrl.executeInfo := executeUnit.memoryStage.data.info
+  decodeCtrl.memoryInfo := memoryUnit.writeBackStage.data.info
+  decodeCtrl.writeBackInfo := writeBackUnit.writeBackStage.data.info
 
-  f_allow := true.B
-  f_flush := ftcInfo.branch
+  // LAB6C: Ctrl
+  // val fetchCtrlSignal   = Wire(new CtrlSignal())
+  // val decodeCtrlSignal  = Wire(new CtrlSignal())
+  // val executeCtrlSignal = Wire(new CtrlSignal())
+  // val memoryCtrlSignal  = Wire(new CtrlSignal())
 
-  val e_conflict =
-    e_info.valid && e_info.reg_wen && e_info.reg_waddr =/= 0.U && ((
-      d_info.src1_ren && d_info.src1_raddr === e_info.reg_waddr
-    ) || (
-      d_info.src2_ren && d_info.src2_raddr === e_info.reg_waddr
-    ))
+  // val f_allow           = Wire(Bool())
+  // val d_allow           = Wire(Bool())
+  // val e_allow           = Wire(Bool())
+  // val m_allow           = Wire(Bool())
 
-  val m_conflict =
-    m_info.valid && m_info.reg_wen && m_info.reg_waddr =/= 0.U && ((
-      d_info.src1_ren && d_info.src1_raddr === m_info.reg_waddr
-    ) || (
-      d_info.src2_ren && d_info.src2_raddr === m_info.reg_waddr
-    ))
+  // val f_flush           = Wire(Bool())
+  // val d_flush           = Wire(Bool())
+  // val e_flush           = Wire(Bool())
+  // val m_flush           = Wire(Bool())
 
-  val w_conflict =
-    w_info.valid && w_info.reg_wen && w_info.reg_waddr =/= 0.U && ((
-      d_info.src1_ren && d_info.src1_raddr === w_info.reg_waddr
-    ) || (
-      d_info.src2_ren && d_info.src2_raddr === w_info.reg_waddr
-    ))
+  // val ftcInfo           = executeUnit.ftcInfo
+  // val d_info            = decodeUnit.executeStage.data.info
+  // val e_info            = executeUnit.memoryStage.data.info
+  // val m_info            = memoryUnit.writeBackStage.data.info
+  // val w_info            = writeBackUnit.writeBackStage.data.info
 
-  d_allow := !e_conflict && !m_conflict && !w_conflict
-  d_flush := ftcInfo.branch
+  // f_allow := true.B
+  // f_flush := ftcInfo.branch
 
-  e_allow := true.B
-  e_flush := false.B
+  // val e_conflict =
+  //   e_info.valid && e_info.reg_wen && e_info.reg_waddr =/= 0.U && ((
+  //     d_info.src1_ren && d_info.src1_raddr === e_info.reg_waddr
+  //   ) || (
+  //     d_info.src2_ren && d_info.src2_raddr === e_info.reg_waddr
+  //   ))
 
-  m_allow := true.B
-  m_flush := false.B
+  // val m_conflict =
+  //   m_info.valid && m_info.reg_wen && m_info.reg_waddr =/= 0.U && ((
+  //     d_info.src1_ren && d_info.src1_raddr === m_info.reg_waddr
+  //   ) || (
+  //     d_info.src2_ren && d_info.src2_raddr === m_info.reg_waddr
+  //   ))
 
-  fetchCtrlSignal.allow_to_go := f_allow && d_allow
-  fetchCtrlSignal.do_flush := f_flush || (!f_allow && d_allow)
+  // val w_conflict =
+  //   w_info.valid && w_info.reg_wen && w_info.reg_waddr =/= 0.U && ((
+  //     d_info.src1_ren && d_info.src1_raddr === w_info.reg_waddr
+  //   ) || (
+  //     d_info.src2_ren && d_info.src2_raddr === w_info.reg_waddr
+  //   ))
 
-  decodeCtrlSignal.allow_to_go := d_allow && e_allow
-  decodeCtrlSignal.do_flush := d_flush || (!d_allow && e_allow)
+  // d_allow := !e_conflict && !m_conflict && !w_conflict
+  // d_flush := ftcInfo.branch
 
-  executeCtrlSignal.allow_to_go := e_allow && m_allow
-  executeCtrlSignal.do_flush := e_flush || (!e_allow && m_allow)
+  // e_allow := true.B
+  // e_flush := false.B
 
-  memoryCtrlSignal.allow_to_go := m_allow
-  memoryCtrlSignal.do_flush := m_flush
+  // m_allow := true.B
+  // m_flush := false.B
 
-  fetchCtrlSignal <> fetchUnit.fetchCtrlSignal
-  fetchCtrlSignal <> decodeStage.fetchCtrlSignal
-  decodeCtrlSignal <> executeStage.decodeCtrlSignal
-  executeCtrlSignal <> memoryStage.executeCtrlSignal
-  memoryCtrlSignal <> writeBackStage.memoryCtrlSignal
+  // fetchCtrlSignal.allow_to_go := f_allow && d_allow
+  // fetchCtrlSignal.do_flush := f_flush || (!f_allow && d_allow)
+
+  // decodeCtrlSignal.allow_to_go := d_allow && e_allow
+  // decodeCtrlSignal.do_flush := d_flush || (!d_allow && e_allow)
+
+  // executeCtrlSignal.allow_to_go := e_allow && m_allow
+  // executeCtrlSignal.do_flush := e_flush || (!e_allow && m_allow)
+
+  // memoryCtrlSignal.allow_to_go := m_allow
+  // memoryCtrlSignal.do_flush := m_flush
+
+  // fetchCtrlSignal <> fetchUnit.fetchCtrlSignal
+  // fetchCtrlSignal <> decodeStage.fetchCtrlSignal
+  // decodeCtrlSignal <> executeStage.decodeCtrlSignal
+  // executeCtrlSignal <> memoryStage.executeCtrlSignal
+  // memoryCtrlSignal <> writeBackStage.memoryCtrlSignal
 
 }

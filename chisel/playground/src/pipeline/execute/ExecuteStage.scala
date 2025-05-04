@@ -18,8 +18,8 @@ class DecodeUnitExecuteUnit extends Bundle {
 
 class ExecuteStage extends Module {
   val io = IO(new Bundle {
-    val decodeUnit  = Input(new DecodeUnitExecuteUnit())
-    val executeUnit = Output(new DecodeUnitExecuteUnit())
+    val decodeUnit   = Input(new DecodeUnitExecuteUnit())
+    val executeUnit  = Output(new DecodeUnitExecuteUnit())
     // LAB6: New Input : decodeCtrlSignal
     val decodeCtrlSignal = Input(new CtrlSignal())
   })
