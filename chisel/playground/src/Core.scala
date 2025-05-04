@@ -79,14 +79,22 @@ class Core extends Module {
   memoryCtrl.memoryCtrlSignal <> writeBackStage.memoryCtrlSignal
 
   // LAB6F: Excute -> ftcInfo -> Fetch, Decode
-  fetchCtrl.ftcInfo := executeUnit.ftcInfo
-  decodeCtrl.ftcInfo := executeUnit.ftcInfo
+  fetchCtrl.ftcInfo <> executeUnit.ftcInfo
+  decodeCtrl.ftcInfo <> executeUnit.ftcInfo
 
   // LAB6F: Decode, Excute, Memory, WriteBack -> info -> Decode
   decodeCtrl.decodeInfo := decodeUnit.executeStage.data.info
   decodeCtrl.executeInfo := executeUnit.memoryStage.data.info
   decodeCtrl.memoryInfo := memoryUnit.writeBackStage.data.info
   decodeCtrl.writeBackInfo := writeBackUnit.writeBackStage.data.info
+
+  // LAB7: Excute, Memory, WriteBack -> info & rdinfo-> Decode
+  decodeUnit.executeInfo := executeUnit.memoryStage.data.info
+  decodeUnit.memoryInfo := memoryUnit.writeBackStage.data.info
+  decodeUnit.writeBackInfo := writeBackUnit.writeBackStage.data.info
+  decodeUnit.executeRdInfo := executeUnit.memoryStage.data.rd_info
+  decodeUnit.memoryRdInfo := memoryUnit.writeBackStage.data.rd_info
+  decodeUnit.writeBackRdInfo := writeBackUnit.writeBackStage.data.rd_info
 
   // LAB6C: Ctrl
   // val fetchCtrlSignal   = Wire(new CtrlSignal())
