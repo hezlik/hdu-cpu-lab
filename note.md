@@ -474,8 +474,8 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 先不管具体的控制信号逻辑，那么对于流水线的相邻两个层级 `x` 和 `y`，它们之间的控制信号应该有如下两种必然关系：
 
-1. `y` 的数据缓存更新被暂停了，那么 `x` 的数据传递会被 `y` 堵住，所以 `x` 也应该暂停数据缓存更新，即 `y.allow_to_go` 为 `false` 时相应的 `x.allow_to_go` 也为 `false`。
-2. `x` 的数据缓存更新被暂停了，同时 `y` 的数据缓存更新没被暂停，下一周期 `y` 没有地方获取新数据，应该要清空数据缓存，即 `x.allow_to_go` 为 `false` 且 `y.allow_to_go` 为 `true` 时相应的 `x.do_flush` 为 `true`。（这里需要注意，`allow_to_go` 是管上一层级往当前层级传递，`do_flush` 是管当前层级往下一层级传递）。
+1. `y` 的数据缓存更新被暂停了，那么 `x` 的数据传递会被 `y` 堵住，所以 `x` 也应该暂停数据缓存更新，即 `y_allow_to_go` 为 `false` 时相应的 `x_allow_to_go` 也为 `false`。
+2. `x` 的数据缓存更新被暂停了，同时 `y` 的数据缓存更新没被暂停，下一周期 `y` 没有地方获取新数据，应该要清空数据缓存，即 `x_allow_to_go` 为 `false` 且 `y_allow_to_go` 为 `true` 时相应的 `x_do_flush` 为 `true`。（这里需要注意，`allow_to_go` 是管上一层级往当前缓存传递，`do_flush` 是管当前缓存往下一层级传递）。
 
 除了这两种控制信号逻辑之外才有各种特化的冲突控制，所以这里对这两个部分做了分割。
 
@@ -486,7 +486,51 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 具体的实现就按照文档中写。
 
+获得了 `IPC: 0.720012` 的好成绩。
+
 ## Lab6 - Code - Federal
+
+我的分布式实现是在每个流水线层级中额外添加了与 `Stage, Unit` 并列的控制模块 `Ctrl`。
+
+整个 MyCPU 的控制信号应该有如下的控制逻辑（假设相邻两层依次是 `x,y`）：
+
+1. `yStage` 控制 `x` 传给 `y`，且 `yStage` 中有寄存器做缓存。
+2. 为了控制 `yStage` 中的传输，需要 `xCtrl` 产生控制信号 `x_allow_to_go` 和 `x_do_flush`。
+3. 为了实现流水线暂停和插入气泡，需要在 `Ctrl` 模块之间传递 `Ready` 信号，`yReady` 表示层级 `y` 是否准备好了，也就是 `x` 层级的数据可以传输到 `y`。`xReady` 可以直接用 `x_allow_to_go` 赋值。
+4. 此时仍然具有集中式中叙述的普适必然逻辑，只是需要用 `Ready` 信号转述。
+5. 其余就是做特化逻辑。
+
+`playground/src/pipeline/fetch/FetchUnit.scala`
+
+`playground/src/pipeline/decode/DecodeStage.scala`
+
+`playground/src/pipeline/execute/ExecuteStage.scala`
+
+`playground/src/pipeline/memory/MemoryStage.scala`
+
+`playground/src/pipeline/writeback/WriteBackStage.scala`
+
+分布式中几个 `Stage` 和集中式控制是一样的，只需要传入对应控制信号并完成控制即可。
+
+`playground/src/pipeline/fetch/FetchCtrl.scala`
+
+需要额外传入 `ExcuteUnit` 中的 `ftcInfo` 出来给计算 `flush` 使用。
+
+`playground/src/pipeline/decode/DecodeCtrl.scala`
+
+需要额外传入 `excuteUnit` 中的 `ftcInfo` 出来给计算 `do_flush` 使用。
+
+需要额外传入 `decodeUnit, excuteUnit, memoryUnit, writeBackUnit` 中的 `info` 出来给计算 `allow_to_go` 使用。
+
+`playground/src/pipeline/execute/ExecuteCtrl.scala`
+
+`playground/src/pipeline/memory/MemoryCtrl.scala`
+
+`playground/src/pipeline/writeback/WriteBackCtrl.scala`
+
+`playground/src/Core.scala`
+
+`Core` 此时需要做的事情仍然是一大堆必要的连线。
 
 ## Lab6 - Report
 
