@@ -522,6 +522,8 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 需要额外传入 `decodeUnit, excuteUnit, memoryUnit, writeBackUnit` 中的 `info` 出来给计算 `allow_to_go` 使用。
 
+这里数据冲突实际上有大量重复的逻辑判断，可以打包成函数 `Conflict(r_info, w_info)` 来减少重复实现。
+
 `playground/src/pipeline/execute/ExecuteCtrl.scala`
 
 `playground/src/pipeline/memory/MemoryCtrl.scala`
@@ -530,7 +532,9 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 `playground/src/Core.scala`
 
-`Core` 此时需要做的事情仍然是一大堆必要的连线。
+`Core` 需要增加新的数据通路，包括几个 `Ready` 信号的传输、`Ctrl` 模块将控制信号传输到 `Stage` 模块、几个 `Info` 和 `ftcInfo` 的传输等。
+
+同样获得了 `IPC: 0.720012` 的好成绩。
 
 ## Lab6 - Report
 
@@ -564,3 +568,40 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
    鸽。
 
+## Lab7 - Code
+
+`playground/src/pipeline/decode/DecodeUnit.scala`
+
+这部分和 lab6 的 `DecodeCtrl` 中的逻辑是一致的，也可以用函数封装一下，就是此时得判定是和 `src1` 冲突还是 `src2` 冲突。
+
+`playground/src/pipeline/decode/DecodeCtrl.scala`
+
+此时数据冲突只会在读数据存储器的时候发生了，也就是 `allow_to_go` 只有在译码层指令读的寄存器和执行层取数指令写的寄存器冲突时才为 `false`。
+
+`playground/src/Core.scala`
+
+`Core` 需要增加数据通路，调度几个 `Info` 和 `RdInfo` 到 `DecodeUnit` 中。
+
+获得了 `IPC: 0.998522` 的好成绩。
+
+## Lab7 - Report
+
+1. 修改 MyCPU 内部数据通路图，为流水线引入数据前递功能。
+
+   鸽。
+
+## Lab7 - Thinking & Exploration
+
+1. 相较于气泡流水线，本实验的 MyCPU 在引入数据前递功能后，性能有何提升？（可以从 IPC 角度进行说明）
+
+   IPC 明显增加了，单个周期平均执行指令数增加了，性能明显提升。
+
+   原因就是因为在数据冲突的时候本来需要插入气泡强行串行化，但是现在只有在取数指令造成的数据冲突下才插入气泡否则就直接读，平均下来单个周期执行的有效指令数明显增加。
+
+2. 查阅资料，除数据前递技术外还可以如何改造气泡流水线提升性能？
+
+   鸽。
+
+3. 查阅资料，了解重定向流水线技术，其与数据前递技术有什么共同点和差异？
+
+   鸽。
