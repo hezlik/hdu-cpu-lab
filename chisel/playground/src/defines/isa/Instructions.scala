@@ -42,12 +42,23 @@ trait HasInstrType {
 // }
 
 // LAB5: FuType
+// object FuType {
+//   def num     = 4
+//   def alu     = 0.U
+//   def mdu     = 1.U
+//   def lsu     = 2.U
+//   def bru     = 3.U
+//   def apply() = UInt(log2Up(num).W)
+// }
+
+// LAB8: FuType
 object FuType {
-  def num     = 4
+  def num     = 5
   def alu     = 0.U
   def mdu     = 1.U
   def lsu     = 2.U
   def bru     = 3.U
+  def csr     = 4.U
   def apply() = UInt(log2Up(num).W)
 }
 
@@ -114,6 +125,9 @@ object LSUOpType {
   def sw  = 9.U
   def sd  = 10.U
 
+  def isLoad(op : UInt) = {op < 7.U}
+  def isStore(op : UInt) = { op >= 7.U }
+
 }
 
 // LAB5: BRUOpType
@@ -127,5 +141,16 @@ object BRUOpType {
   def bgeu = 5.U
   def jal  = 6.U
   def jalr = 7.U
+
+}
+
+// LAB8: CSROpType
+object CSROpType {
+
+  def csrrw  = 0.U
+  def csrrs  = 1.U
+  def csrrc  = 2.U
+
+  def isCSRI(inst : UInt) : Bool = { inst(14) }
 
 }

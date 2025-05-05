@@ -27,7 +27,6 @@ class MemoryUnit extends Module {
 
   val valid = data.info.valid
   val fusel = data.info.fusel
-  val is_l  = !data.info.src2_ren
   val op    = data.info.op
   val addr  = data.src_info.src1_data + data.info.imm
   val rdata = io.loadData >> (addr(2, 0) * 8.U)
@@ -36,7 +35,7 @@ class MemoryUnit extends Module {
   
   res := data.rd_info.wdata
 
-  when (valid && fusel === FuType.lsu && is_l) {
+  when (valid && fusel === FuType.lsu && LSUOpType.isLoad(op)) {
     switch (op) {
       is (LSUOpType. lb) { res := Cat(Fill(56, rdata( 7)), rdata( 7, 0)) }
       is (LSUOpType. lh) { res := Cat(Fill(48, rdata(15)), rdata(15, 0)) }

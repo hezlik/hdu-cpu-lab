@@ -217,6 +217,29 @@ object RV32I_BRUInstr extends HasInstrType with CoreParameter {
 
 }
 
+// LAB8: RV32I_CSRInstr
+object RV32I_CSRInstr extends HasInstrType with CoreParameter {
+
+  def CSRRW  = BitPat("b????????????_?????_001_?????_1110011")
+  def CSRRS  = BitPat("b????????????_?????_010_?????_1110011")
+  def CSRRC  = BitPat("b????????????_?????_011_?????_1110011")
+  def CSRRWI = BitPat("b????????????_?????_101_?????_1110011")
+  def CSRRSI = BitPat("b????????????_?????_110_?????_1110011")
+  def CSRRCI = BitPat("b????????????_?????_111_?????_1110011")
+
+  val table = Array(
+
+    CSRRW  -> List(InstrI, FuType.csr, CSROpType.csrrw),
+    CSRRS  -> List(InstrI, FuType.csr, CSROpType.csrrs),
+    CSRRC  -> List(InstrI, FuType.csr, CSROpType.csrrc),
+    CSRRWI -> List(InstrI, FuType.csr, CSROpType.csrrw),
+    CSRRSI -> List(InstrI, FuType.csr, CSROpType.csrrs),
+    CSRRCI -> List(InstrI, FuType.csr, CSROpType.csrrc),
+
+  )
+
+}
+
 object RVIInstr extends CoreParameter {
   val table = RV32I_ALUInstr.table ++
     (if (XLEN == 64) RV64IInstr.table else Array.empty) ++
@@ -226,5 +249,7 @@ object RVIInstr extends CoreParameter {
     // LAB4: RVIInstr : RV32I_LSUInstr
     RV32I_LSUInstr.table ++
     // LAB5: RVIInstr : RV32I_BRUInstr
-    RV32I_BRUInstr.table
+    RV32I_BRUInstr.table ++
+    // LAB8: RVIInstr : RV32I_CSRInstr
+    RV32I_CSRInstr.table
 }

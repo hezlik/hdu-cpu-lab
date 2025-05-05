@@ -24,6 +24,12 @@ trait Constants extends CoreParameter {
   // GPR RegFile
   val AREG_NUM     = 32
   val REG_ADDR_WID = 5
+
+  // LAB8: CSR RegFile
+  val CREG_NUM        = 16
+  val CSR_ADDR_WID    = 4
+  val VT_CSR_ADDR_WID = 12
+
 }
 
 trait SRAMConst extends Constants {

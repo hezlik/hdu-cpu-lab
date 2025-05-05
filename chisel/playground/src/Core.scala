@@ -16,20 +16,25 @@ class Core extends Module {
   })
 
   val fetchUnit      = Module(new FetchUnit()).io
-  val fetchCtrl      = Module(new FetchCtrl()).io
   val decodeStage    = Module(new DecodeStage()).io
   val decodeUnit     = Module(new DecodeUnit()).io
-  val decodeCtrl     = Module(new DecodeCtrl()).io
   val regfile        = Module(new ARegFile()).io
   val executeStage   = Module(new ExecuteStage()).io
   val executeUnit    = Module(new ExecuteUnit()).io
-  val executeCtrl    = Module(new ExecuteCtrl()).io
   val memoryStage    = Module(new MemoryStage()).io
   val memoryUnit     = Module(new MemoryUnit()).io
-  val memoryCtrl     = Module(new MemoryCtrl()).io
   val writeBackStage = Module(new WriteBackStage()).io
   val writeBackUnit  = Module(new WriteBackUnit()).io
+
+  // LAB6F: Ctrl Module
+  val fetchCtrl      = Module(new FetchCtrl()).io
+  val decodeCtrl     = Module(new DecodeCtrl()).io
+  val executeCtrl    = Module(new ExecuteCtrl()).io
+  val memoryCtrl     = Module(new MemoryCtrl()).io
   val writeBackCtrl  = Module(new WriteBackCtrl()).io
+
+  // LAB8: csrfile
+  val csrfile        = Module(new CRegFile()).io
 
   // 取指单元
   fetchUnit.instSram <> io.instSram
@@ -50,6 +55,10 @@ class Core extends Module {
   executeStage.executeUnit <> executeUnit.executeStage
   executeUnit.dataSram <> io.dataSram
   executeUnit.memoryStage <> memoryStage.executeUnit
+
+  // LAB8: Execute & csrfile
+  executeUnit.csr_read <> csrfile.read
+  executeUnit.csr_write <> csrfile.write
 
   // LAB1: Memory
   memoryStage.memoryUnit <> memoryUnit.memoryStage

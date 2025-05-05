@@ -14,6 +14,9 @@ class ExecuteUnit extends Module {
     val dataSram     = new DataSram()
     // LAB5: ExecuteUnit New Output : ftcInfo
     val ftcInfo      = Output(new FetchInfo())
+    // LAB8: ExecuteUnit New Interaction : csr_read & csr_write
+    val csr_read     = new CsrRead()
+    val csr_write    = new CsrWrite()
   })
 
   // 执行阶段完成指令的执行操作
@@ -39,5 +42,9 @@ class ExecuteUnit extends Module {
 
   // LAB5: ExecuteUnit : ftcInfo
   io.ftcInfo <> fu.ftcInfo
+
+  // LAB8: ExecuteUnit : csr_read & csr_write
+  io.csr_read <> fu.csr_read
+  io.csr_write <> fu.csr_write
   
 }

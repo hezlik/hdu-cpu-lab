@@ -48,7 +48,7 @@ class Decoder extends Module with HasInstrType {
   // io.out.info.src1_pcen  := inst === BitPat("b????????????????????_?????_0010111")
 
   // LAB5: Decoder : src1_pcen
-  io.out.info.src1_pcen  := (inst === BitPat("b????????????????????_?????_0010111")) || (instrType === InstrJ)
+  io.out.info.src1_pcen  := (inst === RV32I_ALUInstr.AUIPC) || (instrType === InstrJ)
 
   // LAB2: Decoder : imm : InstrI & InstrU
   val imm = Wire(UInt(XLEN.W))
@@ -79,7 +79,12 @@ class Decoder extends Module with HasInstrType {
   }
   io.out.info.imm := imm
 
-  // LAB3: Decoder
+  // LAB3: Decoder : fusel
   io.out.info.fusel      := fuType
+
+  // LAB8: Decoder : csr & is_csri & zimm
+  io.out.info.csr        := inst(31, 20)
+  io.out.info.is_csri    := fuType === FuType.csr && CSROpType.isCSRI(inst)
+  io.out.info.zimm       := inst(19, 15)
 
 }

@@ -17,7 +17,6 @@ class Lsu extends Module {
   val valid = io.info.valid
   val op    = io.info.op
   val rt    = io.src_info.src2_data
-  val is_s  = io.info.src2_ren
   val addr  = io.src_info.src1_data + io.info.imm
 
   val wen   = Wire(UInt(DATA_SRAM_WEN_WID.W))
@@ -26,7 +25,7 @@ class Lsu extends Module {
   wen   := 0.U
   wdata := 0.U
 
-  when (valid && is_s) {
+  when (valid && LSUOpType.isStore(op)) {
     switch (op) {
       is (LSUOpType.sb) {
         wen   := "b0000_0001".U << addr(2, 0)

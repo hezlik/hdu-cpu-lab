@@ -49,6 +49,11 @@ class Info extends Bundle {
 
   // LAB3: New Info
   val fusel      = FuType()
+
+  // LAB8: New Info
+  val csr        = UInt(VT_CSR_ADDR_WID.W)
+  val is_csri    = Bool()
+  val zimm       = UInt(XLEN.W)
   
 }
 

@@ -18,17 +18,27 @@ class Fu extends Module {
     val dataSram = new DataSram()
     // LAB5: Fu New Output : ftcInfo
     val ftcInfo  = Output(new FetchInfo())
+    // LAB8: Fu New Interaction : csr_read & csr_write
+    val csr_read  = new CsrRead()
+    val csr_write = new CsrWrite()
   })
 
   // val alu = Module(new Alu()).io
 
-  io.dataSram.en    := false.B
-  io.dataSram.addr  := DontCare
-  io.dataSram.wdata := DontCare
-  io.dataSram.wen   := 0.U
+  io.dataSram.en     := false.B
+  io.dataSram.addr   := DontCare
+  io.dataSram.wdata  := DontCare
+  io.dataSram.wen    := 0.U
 
-  io.ftcInfo.branch := 0.U
-  io.ftcInfo.target := 0.U
+  // LAB5: Initialize ftcInfo
+  io.ftcInfo.branch  := 0.U
+  io.ftcInfo.target  := 0.U
+
+  // LAB8: Initialize csr_read & csr_write
+  io.csr_read.raddr  := 0.U
+  io.csr_write.wen   := false.B
+  io.csr_write.waddr := 0.U
+  io.csr_write.wdata := 0.U
 
   // alu.info     := io.data.info
   // alu.src_info := io.data.src_info
@@ -43,31 +53,40 @@ class Fu extends Module {
   switch (io.data.info.fusel) {
     is (FuType.alu) {
       val alu = Module(new Alu()).io
-      alu.info     := io.data.info
-      alu.src_info := io.data.src_info
-      res          := alu.result
+      alu.info      := io.data.info
+      alu.src_info  := io.data.src_info
+      res           := alu.result
     }
     is (FuType.mdu) {
       val mdu = Module(new Mdu()).io
-      mdu.info     := io.data.info
-      mdu.src_info := io.data.src_info
-      res          := mdu.result
+      mdu.info      := io.data.info
+      mdu.src_info  := io.data.src_info
+      res           := mdu.result
     }
     // LAB4: New FU : LSU
     is (FuType.lsu) {
       val lsu = Module(new Lsu()).io
-      lsu.info     := io.data.info
-      lsu.src_info := io.data.src_info
-      lsu.dataSram <> io.dataSram
+      lsu.info      := io.data.info
+      lsu.src_info  := io.data.src_info
+      lsu.dataSram  <> io.dataSram
     }
     // LAB5: New FU : BRU
     is (FuType.bru) {
       val bru = Module(new Bru()).io
-      bru.info     := io.data.info
-      bru.src_info := io.data.src_info
-      bru.pc       := io.data.pc
-      bru.ftcInfo  <> io.ftcInfo
-      res          := bru.result
+      bru.info      := io.data.info
+      bru.src_info  := io.data.src_info
+      bru.pc        := io.data.pc
+      bru.ftcInfo   <> io.ftcInfo
+      res           := bru.result
+    }
+    // LAB8: New FU : CSR
+    is (FuType.csr) {
+      val csr = Module(new Csr()).io
+      csr.info      := io.data.info
+      csr.src_info  := io.data.src_info
+      csr.csr_read  <> io.csr_read
+      csr.csr_write <> io.csr_write
+      res           := csr.result
     }
   }
 

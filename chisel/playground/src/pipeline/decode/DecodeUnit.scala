@@ -54,7 +54,7 @@ class DecodeUnit extends Module {
   // io.executeStage.data.src_info.src1_data := io.regfile.src1.rdata
   // io.executeStage.data.src_info.src2_data := io.regfile.src2.rdata
 
-  // LAB7: DecodeUnit : Function : Conflict Function
+  // LAB7: DecodeUnit : Function : Conflicts
   def Conflict_1(r_info : Info, w_info : Info) = {
     w_info.valid && w_info.reg_wen && w_info.reg_waddr =/= 0.U &&
     r_info.src1_ren && r_info.src1_raddr === w_info.reg_waddr
@@ -75,21 +75,23 @@ class DecodeUnit extends Module {
 
   // LAB2: DecodeUnit : Register / imm / pc -> data -> Execute
   val src1_table = IndexedSeq(
-    // LAB7: DecodeUnit : src1_table
+    // LAB8: DecodeUnit : src1_table : CSRI
+    info.is_csri             -> info.zimm,
+    // LAB7: DecodeUnit : src1_table : 3 Conflicts
     Conflict_1(info, e_info) -> e_wdata,
     Conflict_1(info, m_info) -> m_wdata,
     Conflict_1(info, w_info) -> w_wdata,
-    info.src1_ren  -> io.regfile.src1.rdata,
+    info.src1_ren            -> io.regfile.src1.rdata,
     info.src1_pcen           -> pc,
   )
   io.executeStage.data.src_info.src1_data := MuxCase(0.U, src1_table)
   
   val src2_table = IndexedSeq(
-    // LAB7: DecodeUnit : src2_table
+    // LAB7: DecodeUnit : src2_table : 3 Conflicts
     Conflict_2(info, e_info) -> e_wdata,
     Conflict_2(info, m_info) -> m_wdata,
     Conflict_2(info, w_info) -> w_wdata,
-    info.src2_ren  -> io.regfile.src2.rdata,
+    info.src2_ren            -> io.regfile.src2.rdata,
   )
   io.executeStage.data.src_info.src2_data := MuxCase(info.imm, src2_table)
 
