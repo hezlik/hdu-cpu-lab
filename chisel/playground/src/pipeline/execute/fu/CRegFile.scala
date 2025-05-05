@@ -60,7 +60,7 @@ class CRegFile extends Module {
     BitPat("b0011_0100_0001") -> List(mepc,       "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     BitPat("b0011_0100_0010") -> List(mcause,     "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     BitPat("b0011_0100_0011") -> List(mtval,      "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
-    BitPat("b0011_0100_0100") -> List(mip,        "hFFFFFFFF_FFFFFFFF".U, "h00000000_00000888".U)
+    BitPat("b0011_0100_0100") -> List(mip,        "hFFFFFFFF_FFFFFFFF".U, "h00000000_00000888".U),
   )
 
   // Initialize Registers

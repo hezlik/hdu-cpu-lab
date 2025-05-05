@@ -605,3 +605,99 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 3. 查阅资料，了解重定向流水线技术，其与数据前递技术有什么共同点和差异？
 
    鸽。
+
+## Lab8 - Code
+
+`playground/src/defines/Const.scala`
+
+专门给 CSR 寄存器堆增加三个常数：
+
+1. 寄存器个数 `CREG_NUM = 16`；
+2. 虚拟寄存器地址宽度 `VT_CSR_ADDR_WID = 12`； 
+3. 实际寄存器地址宽度 `CSR_ADDR_WID = 4`。
+
+`playground/src/defines/Bundles.scala`
+
+由于 CSR 的相应指令的译码和正常 `I` 型指令很不一样，故在 `Info` 包里加入了 `csr, is_csri, zimm` 三个字段。
+
+`playground/src/defines/isa/Instructions.scala`
+
+`playground/src/defines/isa/RVI.scala`
+
+注意 CSR 指令仍然可以用到 lab2 中的数据通路复用的技巧。
+
+`playground/src/pipeline/decode/Decoder.scala`
+
+完成 `Info` 包里 `csr, is_csri, zimm` 的赋值逻辑。
+
+`playground/src/pipeline/decode/DecodeUnit.scala`
+
+给得到 `src1_data` 的多路选择器中增加输入，实现数据通路复用。
+
+为了实现数据通路复用，我不得不给 `Info` 包里加了字段 `is_csri`。因为到 `DecodeUnit` 的时候我的 `Info` 包里已经把整条指令的信息 `inst` 丢了，而 `CSROpType` 也无法区分是不是读立即数的 CSR 指令，也就是说区分 CSR 指令读不读立即数需要在 `Decoder` 里完成。
+
+这里 debug 了好久，最后看波形图发现立即数根本没有被放到 `src1_data` 里，才意识到发生了什么。
+
+`playground/src/pipeline/execute/fu/CRegFile.scala`
+
+这里要完成对 CSR 寄存器堆的维护，包括地址映射都在这一层完成，并提供读写的接口包 `CsrRead` 和 `CsrWrite`。
+
+地址映射尝试了各种方案，包括文档里写的 `Map` 和之前写的 `ListLookup`：
+
+1. `Map`：`chisel` 中形式为 `"hx".U` 的数值被认为是动态的值，而 `Map` 不特殊加库默认只支持不可更改的常 `Map`，所以调用 `getOrElse` 方法得到的一直是找不到的默认值 `0`，直接被忽略编译了数据通路。
+2. `ListLookup`：不知道为什么被限制为键值只能是 `BitPat`。
+3. `MuxLookup`：而且语法很奇怪，需要 `MuxLookup(key, default)(table)` 的形式，而且后面好像得自己打包，没法直接用 `List` 或者元组之类的东西，后面还出现了一大堆奇怪的 warning 然后过不了编译。
+
+最后选择 `ListLookup`，前面强行写 `BitPat` 放虚拟地址，后面 `List` 里放实际地址和读写掩码。
+
+然后是开寄存器堆，我的实现是先初始化全 $0$ 开 $16$ 个 CSR 寄存器（多加了一个 $0$ 寄存器用来当默认值），再给 `mstatus` 和 `misa` 赋初始值。然后发现初始值按照手册上写的 `0000000A_00001800` 和 `80000000_00001100` 过不去，看了下汇编指令 `lab8.asm` 发现要把初始值改成 `00000000_00001800` 和 `80000000_00101100` 才能过，很没道理。
+
+然后是读写寄存器，手册上写寄存器的逻辑有点问题，对于不可写位应该保持原样，应该写成：
+
+```scala
+csrs(waddr) := (io.write.wdata & wmask) | (csrs(waddr) & ~wmask)
+```
+
+`playground/src/pipeline/execute/fu/Csr.scala`
+
+这里对着 RISC-V 手册写就可以了，地址映射没有放到这里做，交给了 CSR 寄存器堆 `csrfile`。
+
+`playground/src/pipeline/execute/Fu.scala`
+
+增加中继 `csr_read` 和 `csr_write` 的数据通路。
+
+`playground/src/pipeline/execute/ExecuteUnit.scala`
+
+增加中继 `csr_read` 和 `csr_write` 的数据通路。
+
+`playground/src/Core.scala`
+
+增加 `Execute` 和 `csrfile` 交互的数据通路，即把对应的 `csr_read` 和 `csr_write` 连接起来。
+
+## Lab8 - Report
+
+1. 选择一个 CSR 寄存器，介绍各字段的含义。
+
+   鸽。
+
+2. 选择第 6 章的 6.4 小节 CSR 指令中的一条指令（非 `csrrc`、非 `csrrwi`），按照你自己的理解，逐步介绍其数据通路设计的思路以及实现过程。
+
+   鸽。
+
+3. 修改 MyCPU 内部数据通路图，支持 CSR 指令。
+
+   鸽。
+
+## Lab8 - Thinking & Exploration
+
+1. 查阅资料，哪些 CSR 寄存器常用 CSR 立即数指令进行读写操作？
+
+   鸽。
+
+2. CSR 指令的写（`write`）、置位（`set`）、清除（`clear`）分别在什么情况下使用？请结合例子说明。
+
+   鸽。
+
+3. 操作系统是怎么知道硬件的信息的呢？
+
+   鸽。
