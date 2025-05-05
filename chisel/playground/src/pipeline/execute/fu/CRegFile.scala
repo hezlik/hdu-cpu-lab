@@ -67,7 +67,7 @@ class CRegFile extends Module {
   val csrs = RegInit(VecInit(Seq.fill(CREG_NUM)(0.U(XLEN.W))))
 
   csrs(mstatus) := "h00000000_00001800".U
-  csrs(misa)    := "h80000000_00101100".U
+  csrs(misa)    := "h80000000_00001100".U
 
   // Read
   val raddr :: rmask :: r_nop :: Nil =
