@@ -41,7 +41,12 @@ class FetchUnit extends Module {
   }
 
   // LAB5: FetchUnit : update pc_next
-  when (io.ftcInfo.branch) {
+  // when (io.ftcInfo.branch) {
+  //   io.instSram.addr := io.ftcInfo.target
+  // }
+
+  // LAB9: Rename Fetch Info : branch -> flush
+  when (io.ftcInfo.flush) {
     io.instSram.addr := io.ftcInfo.target
   }
 

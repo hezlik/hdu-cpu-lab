@@ -17,7 +17,10 @@ class FetchCtrl extends Module {
 
   val ready = io.decodeReady
   val allow = true.B
-  val flush = io.ftcInfo.branch
+  // val flush = io.ftcInfo.branch
+
+  // LAB9: Rename Fetch Info : branch -> flush
+  val flush = io.ftcInfo.flush
 
   io.fetchCtrlSignal.allow_to_go := allow && ready
   io.fetchCtrlSignal.do_flush := flush || (!allow && ready)

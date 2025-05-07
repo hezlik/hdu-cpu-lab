@@ -19,8 +19,14 @@ class CtrlSignal extends Bundle {
 }
 
 // LAB5: FetchInfo
+// class FetchInfo extends Bundle {
+//   val branch = Bool()
+//   val target = UInt(XLEN.W)
+// }
+
+// LAB9: FetchInfo
 class FetchInfo extends Bundle {
-  val branch = Bool()
+  val flush  = Bool()
   val target = UInt(XLEN.W)
 }
 

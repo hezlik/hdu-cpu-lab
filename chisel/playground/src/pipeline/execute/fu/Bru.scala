@@ -83,8 +83,11 @@ class Bru extends Module {
     }
   }
 
-  io.ftcInfo.branch := branch
+  // io.ftcInfo.branch := branch
   io.ftcInfo.target := target
   io.result         := res
+
+  // LAB9: Rename Fetch Info : branch -> flush
+  io.ftcInfo.flush  := branch
 
 }

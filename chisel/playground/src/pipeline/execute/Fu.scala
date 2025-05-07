@@ -31,8 +31,11 @@ class Fu extends Module {
   io.dataSram.wen    := 0.U
 
   // LAB5: Initialize ftcInfo
-  io.ftcInfo.branch  := 0.U
+  // io.ftcInfo.branch  := 0.U
   io.ftcInfo.target  := 0.U
+
+  // LAB9: Rename Fetch Info : branch -> flush
+  io.ftcInfo.flush   := 0.U
 
   // LAB8: Initialize csr_read & csr_write
   io.csr_read.raddr  := 0.U

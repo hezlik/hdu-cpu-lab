@@ -22,7 +22,10 @@ class DecodeCtrl extends Module {
   })
 
   val ready = io.executeReady
-  val flush = io.ftcInfo.branch
+  // val flush = io.ftcInfo.branch
+
+  // LAB9: Rename Fetch Info : branch -> flush
+  val flush = io.ftcInfo.flush
 
   val d_info = io.decodeInfo
   val e_info = io.executeInfo
