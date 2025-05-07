@@ -34,7 +34,7 @@ class Core extends Module {
   val writeBackCtrl  = Module(new WriteBackCtrl()).io
 
   // LAB8: csrfile
-  val csrfile        = Module(new CRegFile()).io
+  val csrfile        = Module(new CSRRegFile()).io
 
   // 取指单元
   fetchUnit.instSram <> io.instSram

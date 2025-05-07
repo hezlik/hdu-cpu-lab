@@ -39,7 +39,7 @@ class Decoder extends Module with HasInstrType {
   io.out.info.src1_raddr := rs
   io.out.info.src2_raddr := rt
   io.out.info.op         := fuOpType
-  io.out.info.reg_wen    := (instrType =/= InstrS) && (instrType =/= InstrB)
+  io.out.info.reg_wen    := (instrType =/= InstrS) && (instrType =/= InstrB) && !(fuType === FuType.alu && fuOpType === ALUOpType.nop)
   io.out.info.reg_waddr  := rd
 
   // LAB2: Decoder

@@ -89,6 +89,9 @@ object ALUOpType {
   def srlw = 13.U
   def sraw = 14.U
 
+  // LAB9: ALU New Instruction : nop
+  def nop  = 15.U
+
 }
 
 // LAB3: MDUOpType
@@ -152,5 +155,10 @@ object CSROpType {
   def csrrc  = 2.U
 
   def isCSRI(inst : UInt) : Bool = { inst(14) }
+
+  // LAB9: New CSR instructions : ecall, ebreak, mret
+  def ecall  = 3.U
+  def ebreak = 4.U
+  def mret   = 5.U
 
 }

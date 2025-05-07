@@ -197,7 +197,7 @@ lab2 开始这个部分改回 `regs(i) = 0`。
 
 2. 观察表 9-7 中指令的 `imm` 字段，为什么 `imm` 字段的长度被设计为 `20` 位？请问这样设计可以和哪些指令搭配使用并发挥什么样的效果？
 
-   `U` 型指令的 $20$ 位高位立即数（`31:12` 位）和 `I` 型指令的 $12$ 位低位立即数（`11:0` 位）可以配合起来实现 `32` 位立即数的功能。
+   `U` 型指令的 $20$ 位高位立即数（`31:12` 位）和 `I` 型指令的 $12$ 位低位立即数（`11:0` 位）可以配合起来实现 $32$ 位立即数的功能。
 
    具体而言，如果想实现对 `x1` 寄存器加 $32$ 位立即数 `imm`，那么 RISC-V 汇编指令中应该这么写：
 
@@ -618,7 +618,7 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 `playground/src/defines/Bundles.scala`
 
-由于 CSR 的相应指令的译码和正常 `I` 型指令很不一样，故在 `Info` 包里加入了 `csr, is_csri, zimm` 三个字段。
+由于 CSR 的相应指令的译码和正常 `I` 型指令很不一样，故在 `Info` 包里加入了 `csr_addr, is_csri, zimm` 三个字段。
 
 `playground/src/defines/isa/Instructions.scala`
 
@@ -628,7 +628,7 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 `playground/src/pipeline/decode/Decoder.scala`
 
-完成 `Info` 包里 `csr, is_csri, zimm` 的赋值逻辑。
+完成 `Info` 包里 `csr_addr, is_csri, zimm` 的赋值逻辑。
 
 `playground/src/pipeline/decode/DecodeUnit.scala`
 
@@ -655,7 +655,7 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 然后是读写寄存器，手册上写寄存器的逻辑有点问题，对于不可写位应该保持原样，应该写成：
 
 ```scala
-csrs(waddr) := (io.write.wdata & wmask) | (csrs(waddr) & ~wmask)
+regs(waddr) := (io.write.wdata & wmask) | (regs(waddr) & ~wmask)
 ```
 
 `playground/src/pipeline/execute/fu/Csr.scala`
@@ -699,5 +699,41 @@ csrs(waddr) := (io.write.wdata & wmask) | (csrs(waddr) & ~wmask)
    鸽。
 
 3. 操作系统是怎么知道硬件的信息的呢？
+
+   鸽。
+
+## Lab9 - Code
+
+鸽。
+
+## Lab9 - Report
+
+1. 选择本实验实现的任一指令或异常，按照你自己的理解，逐步介绍其数据通路设计的思路以及实现过程。
+
+   鸽。
+
+2. 修改 MyCPU 内部数据通路图，增加转移功能。
+
+   鸽。
+
+## Lab9 - Thinking & Exploration
+
+1. 为了实现精确例外，软硬件交互的信息不能放在用户态程序可见的软件上下文中，这是为什么？
+
+   鸽。
+
+2. 如果实现了 C 拓展，还需要考虑取指地址异常的情况吗？请说明原因。
+
+   鸽。
+
+3. 在取指地址未对齐中已经对转移地址进行了检测可以保证转移地址对齐，为什么还需要对取指 `PC` 进行地址对齐检测呢？
+
+   鸽。
+
+4. 为什么在取值单元发生异常时 `InstMEM_rdata` 需要进行替换处理，而当执行单元的 `LSU` 发生异常时 `DataMEM_rdata` 不需要进行替换处理？
+
+   鸽。
+
+5. 在什么情况下 `fence` 和 `wfi` 不能作为空操作进行实现？请查阅资料说明。
 
    鸽。

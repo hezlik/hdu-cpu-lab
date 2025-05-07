@@ -19,7 +19,7 @@ class CsrWrite extends Bundle {
   val wdata = Output(UInt(XLEN.W))
 }
 
-class CRegFile extends Module {
+class CSRRegFile extends Module {
   val io = IO(new Bundle {
     val read  = Flipped(new CsrRead())
     val write = Flipped(new CsrWrite())
@@ -64,23 +64,23 @@ class CRegFile extends Module {
   )
 
   // Initialize Registers
-  val csrs = RegInit(VecInit(Seq.fill(CREG_NUM)(0.U(XLEN.W))))
+  val regs = RegInit(VecInit(Seq.fill(CREG_NUM)(0.U(XLEN.W))))
 
-  csrs(mstatus) := "h00000000_00001800".U
-  csrs(misa)    := "h80000000_00001100".U
+  regs(mstatus) := "h00000000_00001800".U
+  regs(misa)    := "h80000000_00001100".U
 
   // Read
   val raddr :: rmask :: r_nop :: Nil =
     ListLookup(io.read.raddr, addr_default, addr_table)
 
-  io.read.rdata := csrs(raddr) & rmask
+  io.read.rdata := regs(raddr) & rmask
 
   // Write
   val waddr :: w_nop :: wmask :: Nil =
     ListLookup(io.write.waddr, addr_default, addr_table)
 
   when (io.write.wen && waddr =/= 0.U) {
-    csrs(waddr) := (io.write.wdata & wmask) | (csrs(waddr) & ~wmask)
+    regs(waddr) := (io.write.wdata & wmask) | (regs(waddr) & ~wmask)
   }
 
 }

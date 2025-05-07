@@ -227,6 +227,13 @@ object RV32I_CSRInstr extends HasInstrType with CoreParameter {
   def CSRRSI = BitPat("b????????????_?????_110_?????_1110011")
   def CSRRCI = BitPat("b????????????_?????_111_?????_1110011")
 
+  // LAB9: CSR New Instructions BitPat : ecall, ebreak, mret, fence, wfi
+  def ECALL  = BitPat("b000000000000_00000_000_00000_1110011")
+  def EBREAK = BitPat("b000000000001_00000_000_00000_1110011")
+  def MRET   = BitPat("b0011000_00010_00000_000_00000_1110011")
+  def FENCE  = BitPat("b0000????????_00000_000_00000_0001111")
+  def WFI    = BitPat("b0001000_00101_00000_000_00000_1110011")
+
   val table = Array(
 
     CSRRW  -> List(InstrI, FuType.csr, CSROpType.csrrw),
@@ -235,6 +242,13 @@ object RV32I_CSRInstr extends HasInstrType with CoreParameter {
     CSRRWI -> List(InstrI, FuType.csr, CSROpType.csrrw),
     CSRRSI -> List(InstrI, FuType.csr, CSROpType.csrrs),
     CSRRCI -> List(InstrI, FuType.csr, CSROpType.csrrc),
+
+    // LAB9: CSR New Instructions table : ecall, ebreak, mret, fence, wfi
+    ECALL  -> List(InstrI, FuType.csr, CSROpType.ecall),
+    EBREAK -> List(InstrI, FuType.csr, CSROpType.ebreak),
+    MRET   -> List(InstrR, FuType.csr, CSROpType.mret),
+    FENCE  -> List(InstrI, FuType.alu, ALUOpType.nop),
+    WFI    -> List(InstrR, FuType.alu, ALUOpType.nop),
 
   )
 
