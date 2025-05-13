@@ -14,7 +14,14 @@ class Bru extends Module {
     val pc       = Input(UInt(XLEN.W))
     val ftcInfo  = Output(new FetchInfo())
     val result   = Output(UInt(XLEN.W))
+
+    // LAB9: Bru New Interaction : ExceptionInfo
+    val ex_in     = Input(new ExceptionInfo())
+    val ex_out    = Output(new ExceptionInfo())
   })
+
+  // LAB9: Bru : Initialize ExceptionInfo
+  io.ex_out := io.ex_in
   
   val valid  = io.info.valid
   val op     = io.info.op
@@ -80,6 +87,12 @@ class Bru extends Module {
         target := (rs + imm) & Cat(Fill(63,"b1".U),"b0".U)
         res    := pc + 4.U
       }
+    }
+
+    // LAB9: instAddrMisaligned
+    when (branch && target(1, 0) =/= "b00".U) {
+      io.ex_out.exception(instAddrMisaligned) := true.B
+      io.ex_out.tval(instAddrMisaligned)      := target
     }
   }
 

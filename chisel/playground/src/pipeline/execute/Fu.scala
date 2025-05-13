@@ -21,6 +21,11 @@ class Fu extends Module {
     // LAB8: Fu New Interaction : csr_read & csr_write
     val csr_read  = new CsrRead()
     val csr_write = new CsrWrite()
+    // LAB9: Fu New Interaction : ExceptionInfo
+    val ex_in     = Input(new ExceptionInfo())
+    val ex_out    = Output(new ExceptionInfo())
+    // LAB9: Fu New Output : mret
+    val mret      = Output(Bool())
   })
 
   // val alu = Module(new Alu()).io
@@ -43,10 +48,19 @@ class Fu extends Module {
   io.csr_write.waddr := 0.U
   io.csr_write.wdata := 0.U
 
+  // LAB9: Initialize csr_read.ren
+  io.csr_read.ren    := false.B
+
   // alu.info     := io.data.info
   // alu.src_info := io.data.src_info
 
   // io.data.rd_info.wdata := alu.result
+
+  // LAB9: Fu : Initialize ExceptionInfo
+  io.ex_out := io.ex_in
+
+  // LAB9: Fu : Initialize mret
+  io.mret := false.B
 
   // LAB3: Reconstruct Logic of FU
   val res = Wire(UInt(XLEN.W))
@@ -72,6 +86,9 @@ class Fu extends Module {
       lsu.info      := io.data.info
       lsu.src_info  := io.data.src_info
       lsu.dataSram  <> io.dataSram
+      // Fu <- Exception -> Lsu
+      lsu.ex_in     <> io.ex_in
+      lsu.ex_out    <> io.ex_out
     }
     // LAB5: New FU : BRU
     is (FuType.bru) {
@@ -80,6 +97,9 @@ class Fu extends Module {
       bru.src_info  := io.data.src_info
       bru.pc        := io.data.pc
       bru.ftcInfo   <> io.ftcInfo
+      // Fu <- Exception -> Bru
+      bru.ex_in     <> io.ex_in
+      bru.ex_out    <> io.ex_out
       res           := bru.result
     }
     // LAB8: New FU : CSR
@@ -89,7 +109,12 @@ class Fu extends Module {
       csr.src_info  := io.data.src_info
       csr.csr_read  <> io.csr_read
       csr.csr_write <> io.csr_write
+      // Fu <- Exception -> Csr
+      csr.ex_in     <> io.ex_in
+      csr.ex_out    <> io.ex_out
       res           := csr.result
+      // LAB9: FU : CSR : mret
+      csr.mret      <> io.mret
     }
   }
 

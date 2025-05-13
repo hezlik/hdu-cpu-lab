@@ -30,6 +30,13 @@ class FetchInfo extends Bundle {
   val target = UInt(XLEN.W)
 }
 
+// LAB9: ExceptionInfo
+class ExceptionInfo extends Bundle {
+  val exception = Vec(EXC_WID, Bool())
+  val interrupt = Vec(INT_WID, Bool())
+  val tval      = Vec(EXC_WID, UInt(XLEN.W))
+}
+
 class SrcInfo extends Bundle {
   val src1_data = UInt(XLEN.W)
   val src2_data = UInt(XLEN.W)
@@ -60,6 +67,10 @@ class Info extends Bundle {
   val csr        = UInt(VT_CSR_ADDR_WID.W)
   val is_csri    = Bool()
   val zimm       = UInt(XLEN.W)
+
+  // LAB9: New Info
+  val illegal    = Bool()
+  val inst       = UInt(INST_WID.W)
   
 }
 

@@ -12,7 +12,14 @@ class Lsu extends Module {
     val info     = Input(new Info())
     val src_info = Input(new SrcInfo())
     val dataSram = new DataSram()
+
+    // LAB9: Lsu New Interaction : ExceptionInfo
+    val ex_in     = Input(new ExceptionInfo())
+    val ex_out    = Output(new ExceptionInfo())
   })
+
+  // LAB9: Lsu : Initialize ExceptionInfo
+  io.ex_out := io.ex_in
 
   val valid = io.info.valid
   val op    = io.info.op
@@ -25,7 +32,7 @@ class Lsu extends Module {
   wen   := 0.U
   wdata := 0.U
 
-  when (valid && LSUOpType.isStore(op)) {
+  when (valid) {
     switch (op) {
       is (LSUOpType.sb) {
         wen   := "b0000_0001".U << addr(2, 0)
@@ -42,6 +49,29 @@ class Lsu extends Module {
       is (LSUOpType.sd) {
         wen   := "b1111_1111".U << addr(2, 0)
         wdata := Fill(1, rt(63, 0))
+      }
+    }
+
+    // LAB9: storeAddrMisaligned & loadAddrMisaligned
+    val bit = Wire(UInt(SRAM_ADDR_WID.W))
+
+    bit := 0.U
+    
+    switch (LSUOpType.exBit(op)) {
+      is (LSUOpType.b) { bit := 0.U }
+      is (LSUOpType.h) { bit := addr(0) }
+      is (LSUOpType.w) { bit := addr(1, 0) }
+      is (LSUOpType.d) { bit := addr(2, 0) }
+    }
+
+    when (bit =/= 0.U) {
+      wen := false.B
+      when (LSUOpType.isStore(op)) {
+        io.ex_out.exception(storeAddrMisaligned) := true.B
+        io.ex_out.tval(storeAddrMisaligned)      := addr
+      }.otherwise {
+        io.ex_out.exception(loadAddrMisaligned) := true.B
+        io.ex_out.tval(loadAddrMisaligned)      := addr
       }
     }
   }

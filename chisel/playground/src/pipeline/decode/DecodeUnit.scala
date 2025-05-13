@@ -19,6 +19,9 @@ class DecodeUnit extends Module {
     val executeRdInfo   = Input(new RdInfo())
     val memoryRdInfo    = Input(new RdInfo())
     val writeBackRdInfo = Input(new RdInfo())
+    // LAB9: New Input : mode & interrupt
+    val mode      = Input(UInt(MODE_WID.W))
+    val interrupt = Input(Vec(INT_WID, Bool()))
   })
 
   // 译码阶段完成指令的译码操作以及源操作数的准备
@@ -27,7 +30,39 @@ class DecodeUnit extends Module {
   decoder.in.inst := io.decodeStage.data.inst
 
   val pc   = io.decodeStage.data.pc
+  val inst = io.decodeStage.data.inst
   val info = Wire(new Info())
+
+  // LAB9: DecodeUnit : Temporary ExceptionInfo
+  val ex_exc  = WireInit(VecInit(Seq.fill(EXC_WID)(false.B)))
+  val ex_int  = WireInit(VecInit(Seq.fill(INT_WID)(false.B)))
+  val ex_tval = WireInit(VecInit(Seq.fill(EXC_WID)(0.U(XLEN.W))))
+  
+  // LAB9: instAddrMisaligned
+  when (info.valid && pc(1,0) =/= "b00".U) {
+    ex_exc(instAddrMisaligned)  := true.B
+    ex_tval(instAddrMisaligned) := pc
+  }
+
+  // LAB9: illegalInst
+  when (info.valid && info.illegal) {
+    ex_exc(illegalInst)  := true.B
+    ex_tval(illegalInst) := inst
+  }
+
+  // LAB9: breakPoint
+  when (info.valid && info.fusel === FuType.csr && info.op === CSROpType.ebreak) {
+    ex_exc(breakPoint)  := true.B
+  }
+
+  // LAB9: ecallU, ecallS, ecallM
+  when (info.valid && info.fusel === FuType.csr && info.op === CSROpType.ecall) {
+    switch (io.mode) {
+      is (Privilege.u) { ex_exc(ecallU) := true.B }
+      is (Privilege.s) { ex_exc(ecallS) := true.B }
+      is (Privilege.m) { ex_exc(ecallM) := true.B }
+    }
+  }
 
   info       := decoder.out.info
   info.valid := io.decodeStage.data.valid
@@ -94,5 +129,15 @@ class DecodeUnit extends Module {
     info.src2_ren            -> io.regfile.src2.rdata,
   )
   io.executeStage.data.src_info.src2_data := MuxCase(info.imm, src2_table)
+
+  // LAB9: DecodeUnit : Return ExceptionInfo
+  io.executeStage.data.ex.exception := ex_exc
+  io.executeStage.data.ex.tval      := ex_tval
+
+  // LAB9: csrfile -> interrupt
+  io.executeStage.data.ex.interrupt :=
+    ex_int.zip(io.interrupt).map { 
+    case (ex, intr) => ex || intr 
+  }
 
 }

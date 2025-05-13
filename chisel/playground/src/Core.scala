@@ -56,9 +56,23 @@ class Core extends Module {
   executeUnit.dataSram <> io.dataSram
   executeUnit.memoryStage <> memoryStage.executeUnit
 
+  // LAB9: Decode & csrfile
+  decodeUnit.mode <> csrfile.mode
+  decodeUnit.interrupt <> csrfile.interrupt
+
   // LAB8: Execute & csrfile
   executeUnit.csr_read <> csrfile.read
   executeUnit.csr_write <> csrfile.write
+  executeUnit.csr_ftcInfo <> csrfile.ftcInfo
+  executeUnit.mret <> csrfile.mret
+
+  // LAB9: Execute & csrfile
+  executeUnit.ex <> csrfile.ex
+  executeUnit.mret <> csrfile.mret
+  executeUnit.pc <> csrfile.pc
+
+  // LAB9: ExtInterrupt -> csrfile
+  io.interrupt <> csrfile.ext_int
 
   // LAB1: Memory
   memoryStage.memoryUnit <> memoryUnit.memoryStage

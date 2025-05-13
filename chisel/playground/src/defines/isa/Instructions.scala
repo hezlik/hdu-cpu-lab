@@ -3,6 +3,10 @@ package cpu.defines
 import chisel3._
 import chisel3.util._
 
+// Instructions : New import : Const
+import cpu.defines._
+import cpu.defines.Const._
+
 // 指令类型
 trait HasInstrType {
   def InstrN = "b000".U
@@ -114,22 +118,48 @@ object MDUOpType {
 }
 
 // LAB4: LSUOpType
+// object LSUOpType {
+
+//   def lb  = 0.U
+//   def lh  = 1.U
+//   def lw  = 2.U
+//   def ld  = 3.U
+//   def lbu = 4.U
+//   def lhu = 5.U
+//   def lwu = 6.U
+//   def sb  = 7.U
+//   def sh  = 8.U
+//   def sw  = 9.U
+//   def sd  = 10.U
+
+//   def isLoad(op : UInt) = {op < 7.U}
+//   def isStore(op : UInt) = { op >= 7.U }
+
+// }
+
+// LAB9: LSUOpType
 object LSUOpType {
 
-  def lb  = 0.U
-  def lh  = 1.U
-  def lw  = 2.U
-  def ld  = 3.U
-  def lbu = 4.U
-  def lhu = 5.U
-  def lwu = 6.U
-  def sb  = 7.U
-  def sh  = 8.U
-  def sw  = 9.U
-  def sd  = 10.U
+  def lb  = "b0000".U
+  def lh  = "b0001".U
+  def lw  = "b0010".U
+  def ld  = "b0011".U
+  def lbu = "b0100".U
+  def lhu = "b0101".U
+  def lwu = "b0110".U
+  def sb  = "b1000".U
+  def sh  = "b1001".U
+  def sw  = "b1010".U
+  def sd  = "b1011".U
 
-  def isLoad(op : UInt) = {op < 7.U}
-  def isStore(op : UInt) = { op >= 7.U }
+  def b   = "b00".U
+  def h   = "b01".U
+  def w   = "b10".U
+  def d   = "b11".U
+
+  def isLoad(op : UInt) : Bool = !op(3)
+  def isStore(op : UInt) : Bool = op(3)
+  def exBit(op : UInt) = op(1, 0)
 
 }
 
@@ -154,11 +184,82 @@ object CSROpType {
   def csrrs  = 1.U
   def csrrc  = 2.U
 
-  def isCSRI(inst : UInt) : Bool = { inst(14) }
+  def isCSRI(inst : UInt) : Bool = inst(14)
 
   // LAB9: New CSR instructions : ecall, ebreak, mret
   def ecall  = 3.U
   def ebreak = 4.U
   def mret   = 5.U
 
+}
+
+// LAB9: CSRAddr
+object CSRAddr {
+  def empty_mask      = "b0000_0000_0000"
+  def cycle_mask      = "b1100_0000_0000"
+  def mvendorid_mask  = "b1111_0001_0001"
+  def marchid_mask    = "b1111_0001_0010"
+  def mimpid_mask     = "b1111_0001_0011"
+  def mhartid_mask    = "b1111_0001_0100"
+  def mstatus_mask    = "b0011_0000_0000"
+  def misa_mask       = "b0011_0000_0001"
+  def mie_mask        = "b0011_0000_0100"
+  def mtvec_mask      = "b0011_0000_0101"
+  def mcounteren_mask = "b0011_0000_0110"
+  def mscratch_mask   = "b0011_0100_0000"
+  def mepc_mask       = "b0011_0100_0001"
+  def mcause_mask     = "b0011_0100_0010"
+  def mtval_mask      = "b0011_0100_0011"
+  def mip_mask        = "b0011_0100_0100"
+
+  def satp_mask       = "b0001_0100_0000"
+  def medeleg_mask    = "b0011_0000_0010"
+  def mideleg_mask    = "b0011_0000_0011"
+  def pmpcfg0_mask    = "b0011_0110_0000"
+  def pmpaddr0_mask   = "b0011_0111_0000"
+  def tselect_mask    = "b0111_1010_0000" 
+  def tdata1_mask     = "b0111_1010_0001" 
+  def tdata2_mask     = "b0111_1010_0010" 
+
+  def empty      = empty_mask.U
+  def cycle      = cycle_mask.U
+  def mvendorid  = mvendorid_mask.U
+  def marchid    = marchid_mask.U
+  def mimpid     = mimpid_mask.U
+  def mhartid    = mhartid_mask.U
+  def mstatus    = mstatus_mask.U
+  def misa       = misa_mask.U
+  def mie        = mie_mask.U
+  def mtvec      = mtvec_mask.U
+  def mcounteren = mcounteren_mask.U
+  def mscratch   = mscratch_mask.U
+  def mepc       = mepc_mask.U
+  def mcause     = mcause_mask.U
+  def mtval      = mtval_mask.U
+  def mip        = mip_mask.U
+
+  def satp       = satp_mask.U
+  def medeleg    = medeleg_mask.U
+  def mideleg    = mideleg_mask.U
+  def pmpcfg0    = pmpcfg0_mask.U
+  def pmpaddr0   = pmpaddr0_mask.U
+  def tselect    = tselect_mask.U
+  def tdata1     = tdata1_mask.U
+  def tdata2     = tdata2_mask.U
+
+  def apply() = UInt(VT_CSR_ADDR_WID.W)
+
+  def leastMode(addr : UInt) = addr(9, 8)
+  def enRead(addr : UInt) = true.B
+  def enWrite(addr : UInt) = addr(11, 10) =/= "b11".U
+}
+
+// LAB9: Privilege
+object Privilege {
+  val u: UInt = "b00".U  // 用户模式
+  val s: UInt = "b01".U  // 监管模式
+  val h: UInt = "b10".U  // 虚拟机监管模式
+  val m: UInt = "b11".U  // 机器模式
+  
+  def apply() = UInt(MODE_WID.W)
 }

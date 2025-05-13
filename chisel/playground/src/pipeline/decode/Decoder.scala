@@ -87,4 +87,8 @@ class Decoder extends Module with HasInstrType {
   io.out.info.is_csri    := fuType === FuType.csr && CSROpType.isCSRI(inst)
   io.out.info.zimm       := inst(19, 15)
 
+  // LAB9: Decoder : illegal & inst
+  io.out.info.illegal    := instrType === InstrN
+  io.out.info.inst       := inst
+
 }

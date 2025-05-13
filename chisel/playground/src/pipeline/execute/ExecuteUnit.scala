@@ -17,6 +17,12 @@ class ExecuteUnit extends Module {
     // LAB8: ExecuteUnit New Interaction : csr_read & csr_write
     val csr_read     = new CsrRead()
     val csr_write    = new CsrWrite()
+    // LAB9: ExecuteUnit New Output : ExceptionInfo, mret, pc
+    val ex           = Output(new ExceptionInfo())
+    val mret         = Output(Bool())
+    val pc           = Output(UInt(XLEN.W))
+    // LAB9: ExecuteUnit New Input : csr_ftcInfo
+    val csr_ftcInfo  = Input(new FetchInfo())
   })
 
   // 执行阶段完成指令的执行操作
@@ -46,5 +52,26 @@ class ExecuteUnit extends Module {
   // LAB8: ExecuteUnit : csr_read & csr_write
   io.csr_read <> fu.csr_read
   io.csr_write <> fu.csr_write
+
+  // LAB9: ExecuteUnit : ExceptionInfo
+  io.executeStage.data.ex <> fu.ex_in
+
+  when (io.memoryStage.data.info.valid) {
+    io.ex <> fu.ex_out
+  }.otherwise {
+    io.ex.exception := VecInit(Seq.fill(EXC_WID)(false.B))
+    io.ex.interrupt := VecInit(Seq.fill(INT_WID)(false.B))
+    io.ex.tval      := VecInit(Seq.fill(EXC_WID)(0.U(XLEN.W)))
+  }
+
+  // LAB9: csrfile -> csr_ftcInfo -> ExecuteUnit
+  when (io.csr_ftcInfo.flush) {
+    io.ftcInfo := io.csr_ftcInfo
+    io.memoryStage.data.info.reg_wen := false.B
+  }
+
+  // LAB9: ExecuteUnit : mret, pc
+  io.mret <> fu.mret
+  io.pc := fu.data.pc
   
 }
