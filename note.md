@@ -73,7 +73,7 @@ https://code.educoder.net/ppg69fuwb/riscv-lab
 
 根据整个流水线的图来看怎么连接总线就很容易了。
 
-注意这里需要特别处理寄存器堆 `regfile` 和数据存储器 `dataSram` 的一些事情，以及把 `debug` 丢出去的事情。
+注意这里需要特别处理寄存器堆 `ARegFile` 和数据存储器 `dataSram` 的一些事情，以及把 `debug` 丢出去的事情。
 
 ## Lab1 - Report
 
@@ -262,6 +262,10 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 2. 有符号取余要通过被除数 $-$ 商 $\times$ 除数实现。
 
 我觉得这个部分的测试应该不是很强，大概率写的代码还有问题，但是问题可以先交给以后的我！~~估计乘除法部分后面也不太会有测试。~~
+
+`playground/src/CpuConfig.scala`
+
+开了一下 `RV64M` 的扩展选项，做到很后面才补，不开也能过，不知道有什么用。
 
 ## Lab3 - Report
 
@@ -452,11 +456,11 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 `playground/src/pipeline/fetch/FetchUnit.scala`
 
-用 `fetchUnit` 的控制信号 `fetchCtrlSignal` 控制 `PC` 更新，`allow_to_go` 不准走就不许更新 `PC`。
+用 `FetchUnit` 的控制信号 `fetchCtrlSignal` 控制 `PC` 更新，`allow_to_go` 不准走就不许更新 `PC`。
 
 `playground/src/pipeline/decode/DecodeStage.scala`
 
-用 `fetchUnit` 的控制信号 `fetchCtrlSignal` 控制 `decodeStage` 中的数据缓存的更新和清空。
+用 `FetchUnit` 的控制信号 `fetchCtrlSignal` 控制 `DecodeStage` 中的数据缓存的更新和清空。
 
 清空可以直接使用 `valid := 0` 来实现，指令无效化就相当于清空指令。
 
@@ -518,9 +522,9 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 `playground/src/pipeline/decode/DecodeCtrl.scala`
 
-需要额外传入 `excuteUnit` 中的 `ftcInfo` 出来给计算 `do_flush` 使用。
+需要额外传入 `ExcuteUnit` 中的 `ftcInfo` 出来给计算 `do_flush` 使用。
 
-需要额外传入 `decodeUnit, excuteUnit, memoryUnit, writeBackUnit` 中的 `info` 出来给计算 `allow_to_go` 使用。
+需要额外传入 `DecodeUnit, ExcuteUnit, MemoryUnit, WriteBackUnit` 中的 `info` 出来给计算 `allow_to_go` 使用。
 
 这里数据冲突实际上有大量重复的逻辑判断，可以打包成函数 `Conflict(r_info, w_info)` 来减少重复实现。
 
@@ -612,9 +616,9 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 
 专门给 CSR 寄存器堆增加三个常数：
 
-1. 寄存器个数 `CREG_NUM = 16`；
-2. 虚拟寄存器地址宽度 `VT_CSR_ADDR_WID = 12`； 
-3. 实际寄存器地址宽度 `CSR_ADDR_WID = 4`。
+1. CSR 寄存器个数 `CREG_NUM = 16`；
+2. 虚拟 CSR 寄存器地址宽度 `VT_CSR_ADDR_WID = 12`； 
+3. 实际 CSR 寄存器地址宽度 `CSR_ADDR_WID = 4`。
 
 `playground/src/defines/Bundles.scala`
 
@@ -658,9 +662,11 @@ git remote set-url origin git@github.com:hezlik/hdu-cpu-lab.git
 regs(waddr) := (io.write.wdata & wmask) | (regs(waddr) & ~wmask)
 ```
 
+~~嘻嘻 `cycle` 没自增，估计测试用例根本调用 `cycle`。~~
+
 `playground/src/pipeline/execute/fu/Csr.scala`
 
-这里对着 RISC-V 手册写就可以了，地址映射没有放到这里做，交给了 CSR 寄存器堆 `csrfile`。
+这里对着 RISC-V 手册写就可以了，地址映射没有放到这里做，交给了 CSR 寄存器堆 `CSRRegFile`。
 
 `playground/src/pipeline/execute/Fu.scala`
 
@@ -672,7 +678,11 @@ regs(waddr) := (io.write.wdata & wmask) | (regs(waddr) & ~wmask)
 
 `playground/src/Core.scala`
 
-增加 `Execute` 和 `csrfile` 交互的数据通路，即把对应的 `csr_read` 和 `csr_write` 连接起来。
+增加 `Execute` 和 `CSRRegFile` 交互的数据通路，即把对应的 `csr_read` 和 `csr_write` 连接起来。
+
+`playground/src/CpuConfig.scala`
+
+开了一下 `CSR` 指令的选项。
 
 ## Lab8 - Report
 
@@ -704,7 +714,140 @@ regs(waddr) := (io.write.wdata & wmask) | (regs(waddr) & ~wmask)
 
 ## Lab9 - Code
 
-鸽。
+异常处理可以分为两步：找到异常和处理异常，前者主要是在整个流水线中实现 `ExceptionInfo`，后者则主要是把 `ExceptionInfo` 传入 `CSRRegFile` 后处理。
+
+感觉自己改了几百行代码，调试极其痛苦，遂只测单组数据：
+
+```makefile
+make trace TESTBIN_DIR=./test/bin/riscv-test/002-rv64mi-p-breakpoint.bin
+```
+
+`playground/src/defines/Const.scala`
+
+加个文档里的 `HasExceptionNO` 以及里面的优先级 `Exceptionity`，方便找对应的异常等级和优先级用的。
+
+自己再偷偷加个 `HasInterruptNO` 以及里面的优先级 `Interruptionity`，方便找对应的中断等级。
+
+注意要把这俩加入 `Const` 的继承列表里，其它地方能直接使用这些常数是因为 `Const` 被 `import` 了。
+
+顺便加个 `mode` 的位宽常数 `MODE_WID = 2`。
+
+此外这里多加入了一些寄存器，需要把寄存器堆的实际长度扩展一下。
+
+此外这里还把识别不了的指令重定向到了 `nop` 上。
+
+`playground/src/defines/isa/Instructions.scala`
+
+给 `ecall, ebreak, mret` 三条指令加编号。
+
+为了方便实现文档里说的 `fence` 和 `wfi` 的 `nop` 化，还在 `ALU` 里加了条 `nop`。
+
+为了方便找 CSR 寄存器的虚拟地址，加了个 `CSRAddr` 作为映射列表（CSR 寄存器名称到其虚拟地址）。
+
+为了方便实现访存异常判断，设计编号方式，将指令编号的后两位设计为对齐字长。
+
+`playground/src/defines/isa/RVI.scala`
+
+新增 `ecall, ebreak, mret, fence, wfi` 五条指令，其中 `fence, wfi` 直接指向 `nop`。
+
+`playground/src/defines/Bundles.scala`
+
+先是给 `FetchInfo` 里的 `branch` 改成 `flush`。
+
+再给 `Info` 里加 `illegal` 表示指令合不合法，为了异常处理被迫把 `inst` 也加进去。
+
+`playground/src/pipeline/fetch/FetchCtrl.scala`
+
+给 `FetchInfo` 里的 `branch` 改成 `flush`。
+
+`playground/src/pipeline/fetch/FetchUnit.scala`
+
+给 `FetchInfo` 里的 `branch` 改成 `flush`。
+
+`playground/src/pipeline/decode/Decoder.scala`
+
+`Decoder` 就多处理 `illegal` 和 `inst`。
+
+`playground/src/pipeline/decode/DecodeUnit.scala`
+
+记录 `instAddrMisaligned, illegalInst, breakPoint, ecallU, ecallS, ecallM` 这几种异常，需要引入 `mode`。
+
+判断 `illegalInst` 有一个问题，指令在传到 `DecodeUnit` 之后才能开始判断，可以使用 `fetchUnit` 传过来的 `valid` 判断。
+
+还要把 `CSRRegFile` 中接过来的 `interrupt` 写到 `exceptionInfo` 的 `interupt` 中。
+
+`playground/src/pipeline/execute/ExecuteStage.scala`
+
+`ExceptionInfo` 应该直接丢进这里的 `IdExeData` 内作为执行级缓存的一部分，其他地方就基本不用改了。
+
+`playground/src/pipeline/execute/ExecuteUnit.scala`
+
+传输一下 `ExceptionInfo` 和 `mret` 表示是否执行异常返回，需要传入 `FU` 后得到结果再接到 `CSRRegFile`。
+
+如果有异常需要把 `reg_wen` 再设为 `0`，可以通过返回的 `ftcInfo` 判断是否有异常。
+
+`playground/src/pipeline/execute/Fu.scala`
+
+给 `FetchInfo` 里的 `branch` 改成 `flush`，之后就是充当 `ExecuteUnit` 和 `Csr` 的传输 `ExceptionInfo, mret, pc` 的交互中介。
+
+`playground/src/pipeline/execute/fu/Lsu.scala`
+
+记录 `storeAddrMisaligned` 和 `loadAddrMisaligned` 这两种异常，实现可以通过调整指令编号简化。
+
+注意这里不管是存数还是取数指令都要判断是否发生地址不对齐的异常。
+
+`playground/src/pipeline/execute/fu/Bru.scala`
+
+给 `FetchInfo` 里的 `branch` 改成 `flush`，记录 `instAddrMisaligned` 异常。
+
+`playground/src/pipeline/execute/fu/CSRRegFile.scala`
+
+更改 `mstatus` 和 `misa` 的初始值和读写掩码。
+
+增加 `mode` 寄存器和读 `mode` 的功能。
+
+给 `CSRRegFile` 的读写交互增加能不能读写 `wen, ren` 和读写是否合法 `rlegal, wlegal`。
+
+由于我的实现和手册不一样，`CSRRegFile` 直接交互在单周期内只能单次读写，而后面的异常处理部分需要处理多个 CSR 寄存器，所以我选择把最后的 `ExceptionInfo, mret, pc` 丢进 `CSRRegFile` 内部处理，所以 `CSRRegFile` 和其它部件之间的交互流程会是：
+
+```
+ExecuteUnit -> Csr        : 传递 ExceptionInfo 到 Csr
+Csr -> CSRRegFile         : 传递需要的读写的 Csr 寄存器信息
+CSRRegFile -> Csr         : 返回需要读写的 Csr 寄存器信息，附带是否异常的信息
+Csr -> executeUnit        : 抛出 ExceptionInfo, mret, pc 到 ExecuteUnit，准备交给 CSRRegFile 处理异常
+ExecuteUnit -> CSRRegFile : ExceptionInfo, mret, pc 交给 CSRRegFile 处理异常
+Core -> CSRRegFile        : ExtInterupt 交给 CSRRegFile 处理中断
+Csr -> ExecuteUnit        : ftcInfo 反馈给 ExecuteUnit
+Csr -> DecodeUnit         : interrupt 交给 DecodeUnit
+```
+
+疑似压根没测中断（中断信号一直为 $0$），估计要被鸽到后面调试了。
+
+`playground/src/pipeline/execute/fu/Csr.scala`
+
+`Csr` 需要配合 `CSRRegFile`，处理出对应的 `wen` 和 `ren`（手册里有表），以及在 `CSRRegFile` 不能合法读写时抛出异常。
+
+`playground/src/Core.scala`
+
+增加多出来的数据通路。
+
+需要注意的是还要从外面引入中断信号 `mti, mei, msi`，信息都在 `interrupt` 里。
+
+`playground/src/CpuConfig.scala`
+
+开了一下 `U` 模式的选项。
+
+几个注意的点：
+
+1. 中断有响应条件。
+2. `mstatus` 要写好几个位，和 lab8 中的写 csr 寄存器堆的办法相同。
+3. 出现了几个额外的寄存器 `satp, medeleg, mideleg, pmpcfg0, pmpaddr0, tselect, tdata1, tdata2` 需要多写。
+4. `tselect` 有初值 `h00000000_00000001` 和写掩码 `hFFFFFFFF_FFFFFFFE`。
+5. 然而 ` medeleg, mideleg` 这两个寄存器在不实现 `S` 模式的机器上不应该出现，所以出现了应该当异常跳过。
+6. 有初始值的几个 csr 寄存器应该在隐式复位信号 `reset` 为真的时候赋初值而不是每次都赋初值，而且直接写 `when (reset.asBool)` 会被 `RegInit` 覆盖，需要直接在 `RegInit` 中处理，这在 lab8 中没被卡出来。
+7. `DecodeUnit` 的 `info.valid` 逻辑不包括 `Decoder` 中传出来的 `valid` 而直接赋值为 `DecodeStage` 中传过来的 `valid`，这是因为无法识别的指令应该直接触发异常，所以我把无法识别的指令重定向到 `nop` 了。
+8. 接着 7，`valid` 和异常应该是互斥的，所以在 `valid` 的时候才能处理异常。
+9. `mstatus` 的 `mpp` 位（即 `mstatus(12, 11)`）只能同时被写入支持的模式（包括 csr 指令写入和异常处理写入），如果被写入不支持的模式应该直接覆盖这个字段为支持的模式（测试好像是要求保持原模式）。为了方便以后加入 `S` 模式不用改这个部分，可以用 `mstatus.sxl` 和 `mstatus.uxl` 判断是否支持对应模式。
 
 ## Lab9 - Report
 
