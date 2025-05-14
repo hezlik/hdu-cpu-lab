@@ -6,7 +6,6 @@ import cpu.defines._
 import cpu.defines.Const._
 import cpu.CpuConfig
 
-// TODO: Merge Read & Write
 class CsrRead extends Bundle {
   val ren    = Output(Bool())
   val raddr  = Output(UInt(VT_CSR_ADDR_WID.W))

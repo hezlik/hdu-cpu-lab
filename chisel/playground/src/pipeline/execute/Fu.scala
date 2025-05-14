@@ -24,6 +24,7 @@ class Fu extends Module {
     // Read & Write CSRRegFile
     val csr_read  = new CsrRead()
     val csr_write = new CsrWrite()
+    val mode      = Input(UInt(MODE_WID.W))
 
     // Exceptions & Interruptions
     val ex_in     = Input(new ExceptionInfo())
@@ -49,7 +50,6 @@ class Fu extends Module {
   io.mret            := false.B
 
   val res = WireInit(0.U(XLEN.W))
-  
   switch (io.data.info.fusel) {
     is (FuType.alu) {
       val alu = Module(new Alu()).io
@@ -76,9 +76,9 @@ class Fu extends Module {
       bru.info      := io.data.info
       bru.src_info  := io.data.src_info
       bru.pc        := io.data.pc
-      bru.ftcInfo   <> io.ftcInfo
       bru.ex_in     <> io.ex_in
       bru.ex_out    <> io.ex_out
+      bru.ftcInfo   <> io.ftcInfo
       res           := bru.result
     }
     is (FuType.csr) {
@@ -87,10 +87,11 @@ class Fu extends Module {
       csr.src_info  := io.data.src_info
       csr.csr_read  <> io.csr_read
       csr.csr_write <> io.csr_write
+      csr.mode      <> io.mode
       csr.ex_in     <> io.ex_in
       csr.ex_out    <> io.ex_out
-      res           := csr.result
       csr.mret      <> io.mret
+      res           := csr.result
     }
   }
 

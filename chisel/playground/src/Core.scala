@@ -60,7 +60,7 @@ class Core extends Module {
   // CSRRegFile
   executeUnit.csr_read <> csrfile.read
   executeUnit.csr_write <> csrfile.write
-  decodeUnit.mode <> csrfile.mode
+  executeUnit.mode <> csrfile.mode
 
   // Exceptions & Interruptions
   io.interrupt <> csrfile.ext_int

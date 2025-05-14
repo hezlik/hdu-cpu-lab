@@ -22,7 +22,6 @@ class DecodeUnit extends Module {
     val writeBackRdInfo = Input(new RdInfo())
     
     // Read CSRRegFile
-    val mode            = Input(UInt(MODE_WID.W))
     val interrupt       = Input(Vec(INT_WID, Bool()))
   })
 
@@ -38,10 +37,7 @@ class DecodeUnit extends Module {
 
   val valid = info.valid
   val legal = decoder.info.valid
-  val fusel = info.fusel
-  val op    = info.op
 
-  // TODO: Exceptions Delays
   // Exceptions
   // Temporary ExceptionInfo
   val ex_exc  = WireInit(VecInit(Seq.fill(EXC_WID)(false.B)))
@@ -58,20 +54,6 @@ class DecodeUnit extends Module {
   when (valid && !legal) {
     ex_exc(illegalInst)  := true.B
     ex_tval(illegalInst) := inst
-  }
-
-  // Exception : breakPoint
-  when (valid && fusel === FuType.csr && op === CSROpType.ebreak) {
-    ex_exc(breakPoint)  := true.B
-  }
-
-  // Exception : ecallU, ecallS, ecallM
-  when (valid && fusel === FuType.csr && op === CSROpType.ecall) {
-    switch (io.mode) {
-      is (Privilege.u) { ex_exc(ecallU) := true.B }
-      is (Privilege.s) { ex_exc(ecallS) := true.B }
-      is (Privilege.m) { ex_exc(ecallM) := true.B }
-    }
   }
 
   // Read ARegFile

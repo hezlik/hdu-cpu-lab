@@ -14,15 +14,13 @@ class Csr extends Module {
     // Read & Write CSRRegFile
     val csr_read  = new CsrRead()
     val csr_write = new CsrWrite()
+    val mode      = Input(UInt(MODE_WID.W))
 
     // Exceptions & Interruptions 
     val ex_in     = Input(new ExceptionInfo())
     val ex_out    = Output(new ExceptionInfo())
     val mret      = Output(new Bool())
   })
-
-  io.ex_out := io.ex_in
-  io.mret   := false.B
 
   io.csr_read.raddr  := io.info.csr
   io.csr_write.waddr := io.info.csr
@@ -35,16 +33,28 @@ class Csr extends Module {
   val rs    = io.src_info.src1_data
   val cdata = io.csr_read.rdata
 
-  io.result := cdata
-
   val wdata = WireInit(0.U(XLEN.W))
+
+  val ex_exc  = WireInit(io.ex_in.exception)
+  val ex_int  = WireInit(io.ex_in.interrupt)
+  val ex_tval = WireInit(io.ex_in.tval)
+  val mret    = WireInit(false.B)
 
   when (valid) {
     switch (op){
-      is (CSROpType.csrrw) { wdata := rs }
-      is (CSROpType.csrrs) { wdata := cdata | rs }
-      is (CSROpType.csrrc) { wdata := cdata & ~rs }
-      is (CSROpType.mret) { io.mret := true.B }
+      is (CSROpType. csrrw) { wdata := rs }
+      is (CSROpType. csrrs) { wdata := cdata | rs }
+      is (CSROpType. csrrc) { wdata := cdata & ~rs }
+
+      is (CSROpType.ebreak) { ex_exc(breakPoint) := true.B }
+      is (CSROpType. ecall) {
+        switch (io.mode) {
+          is (Privilege.u) { ex_exc(ecallU) := true.B }
+          is (Privilege.s) { ex_exc(ecallS) := true.B }
+          is (Privilege.m) { ex_exc(ecallM) := true.B }
+        }
+      }
+      is (CSROpType.  mret) { mret := true.B }
     }
 
     // Exception : illegalInst : read / write csr
@@ -71,10 +81,17 @@ class Csr extends Module {
     io.csr_write.wen := wen
 
     when (!io.csr_read.rlegal || !io.csr_write.wlegal) {
-      io.ex_out.exception(illegalInst) := true.B
-      io.ex_out.tval(illegalInst)      := inst
+      ex_exc(illegalInst)  := true.B
+      ex_tval(illegalInst) := inst
     }
   }
 
+  io.result := cdata
+
   io.csr_write.wdata := wdata
+
+  io.ex_out.exception := ex_exc
+  io.ex_out.interrupt := ex_int
+  io.ex_out.tval      := ex_tval
+  io.mret             := mret
 }

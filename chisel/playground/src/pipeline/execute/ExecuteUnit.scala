@@ -21,6 +21,7 @@ class ExecuteUnit extends Module {
     // Read & Write CSRRegFile
     val csr_read     = new CsrRead()
     val csr_write    = new CsrWrite()
+    val mode         = Input(UInt(MODE_WID.W))
 
     // Exceptions & Interruptions
     val ex           = Output(new ExceptionInfo())
@@ -48,6 +49,7 @@ class ExecuteUnit extends Module {
   // Read & Write CSRRegFile
   io.csr_read <> fu.csr_read
   io.csr_write <> fu.csr_write
+  io.mode <> fu.mode
 
   // Exceptions & Interruptions
   // Commit ex, mret, pc
