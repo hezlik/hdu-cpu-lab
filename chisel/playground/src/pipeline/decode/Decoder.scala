@@ -6,19 +6,12 @@ import cpu.defines._
 import cpu.defines.Const._
 
 class Decoder extends Module with HasInstrType {
-  // TODO: Discard in & out
   val io = IO(new Bundle {
-    // inputs
-    val in = Input(new Bundle {
-      val inst = UInt(XLEN.W)
-    })
-    // outputs
-    val out = Output(new Bundle {
-      val info = new Info()
-    })
+    val inst = Input(UInt(XLEN.W))
+    val info = Output(new Info())
   })
 
-  val inst = io.in.inst
+  val inst = io.inst
   // 根据输入的指令inst从Instructions.DecodeTable中查找对应的指令类型、功能单元类型和功能单元操作类型
   // 如果找不到匹配的指令，则使用Instructions.DecodeDefault作为默认值
   // instrType、fuType和fuOpType分别被赋值为Instructions.DecodeTable中的对应值
@@ -27,46 +20,45 @@ class Decoder extends Module with HasInstrType {
 
   val (rs, rt, rd) = (inst(19, 15), inst(24, 20), inst(11, 7))
 
-  io.out.info.valid      := instrType =/= InstrN
-  io.out.info.inst       := inst
-  io.out.info.op         := fuOpType
-  io.out.info.fusel      := fuType
-  io.out.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
-  io.out.info.src1_pcen  := (inst === RV32I_ALUInstr.AUIPC) || (instrType === InstrJ)
-  io.out.info.src1_raddr := rs
-  io.out.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
-  io.out.info.src2_raddr := rt
-  io.out.info.reg_wen    := (instrType =/= InstrS) && (instrType =/= InstrB) && !(fuType === FuType.alu && fuOpType === ALUOpType.nop)
-  io.out.info.reg_waddr  := rd
-  io.out.info.csr        := inst(31, 20)
-  io.out.info.is_csri    := fuType === FuType.csr && CSROpType.isCSRI(inst)
-  io.out.info.zimm       := inst(19, 15)
+  io.info.valid      := instrType =/= InstrN
+  io.info.inst       := inst
+  io.info.op         := fuOpType
+  io.info.fusel      := fuType
+  io.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
+  io.info.src1_pcen  := (inst === RV32I_ALUInstr.AUIPC) || (instrType === InstrJ)
+  io.info.src1_raddr := rs
+  io.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
+  io.info.src2_raddr := rt
+  io.info.reg_wen    := (instrType =/= InstrS) && (instrType =/= InstrB) && !(fuType === FuType.alu && fuOpType === ALUOpType.nop)
+  io.info.reg_waddr  := rd
+  io.info.csr        := inst(31, 20)
+  io.info.is_csri    := fuType === FuType.csr && CSROpType.isCSRI(inst)
+  io.info.zimm       := inst(19, 15)
 
   val imm = WireInit(0.U(XLEN.W))
 
-  // TODO: Rewrite with pad
   switch (instrType) {
     is (InstrI) {
       val imm12 = inst(31, 20)
-      imm := Cat(Fill(54, imm12(11)), imm12)
+      imm := Cat(Fill(XLEN - 12, imm12(11)), imm12)
     }
     is (InstrU) {
       val imm32 = inst(31, 12) << 12
-      imm := Cat(Fill(32, imm32(31)), imm32)
+      imm := Cat(Fill(XLEN - 32, imm32(31)), imm32)
     }
     is (InstrS) {
       val imm12 = Cat(inst(31, 25), inst(11, 7))
-      imm := Cat(Fill(54, imm12(11)), imm12)
+      imm := Cat(Fill(XLEN - 12, imm12(11)), imm12)
     }
     is (InstrB) {
       val imm13 = Cat(Cat(inst(31), inst(7)), Cat(inst(30, 25), inst(11, 8))) << 1
-      imm := Cat(Fill(53, imm13(12)), imm13)
+      imm := Cat(Fill(XLEN - 13, imm13(12)), imm13)
     }
     is (InstrJ) {
       val imm21 = Cat(Cat(inst(31), inst(19, 12)), Cat(inst(20), inst(30 ,21))) << 1
-      imm := Cat(Fill(43, imm21(20)), imm21)
+      imm := Cat(Fill(XLEN - 20, imm21(20)), imm21)
     }
   }
 
-  io.out.info.imm := imm
+  io.info.imm := imm
 }

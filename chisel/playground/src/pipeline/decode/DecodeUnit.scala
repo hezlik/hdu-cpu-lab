@@ -28,47 +28,51 @@ class DecodeUnit extends Module {
 
   // 译码阶段完成指令的译码操作以及源操作数的准备
   val decoder = Module(new Decoder()).io
-  decoder.in.inst := io.decodeStage.data.inst
+  decoder.inst := io.decodeStage.data.inst
 
   val pc   = io.decodeStage.data.pc
   val inst = io.decodeStage.data.inst
-  val info = Wire(new Info())
+  val info = WireInit(decoder.info)
+
+  info.valid := io.decodeStage.data.valid
+
+  val valid = info.valid
+  val legal = decoder.info.valid
+  val fusel = info.fusel
+  val op    = info.op
 
   // TODO: Exceptions Delays
+  // Exceptions
   // Temporary ExceptionInfo
   val ex_exc  = WireInit(VecInit(Seq.fill(EXC_WID)(false.B)))
   val ex_int  = WireInit(VecInit(Seq.fill(INT_WID)(false.B)))
   val ex_tval = WireInit(VecInit(Seq.fill(EXC_WID)(0.U(XLEN.W))))
   
   // Exception : instAddrMisaligned
-  when (info.valid && pc(1,0) =/= "b00".U) {
+  when (valid && pc(1,0) =/= "b00".U) {
     ex_exc(instAddrMisaligned)  := true.B
     ex_tval(instAddrMisaligned) := pc
   }
 
   // Exception : illegalInst
-  when (info.valid && !decoder.out.info.valid) {
+  when (valid && !legal) {
     ex_exc(illegalInst)  := true.B
     ex_tval(illegalInst) := inst
   }
 
   // Exception : breakPoint
-  when (info.valid && info.fusel === FuType.csr && info.op === CSROpType.ebreak) {
+  when (valid && fusel === FuType.csr && op === CSROpType.ebreak) {
     ex_exc(breakPoint)  := true.B
   }
 
   // Exception : ecallU, ecallS, ecallM
-  when (info.valid && info.fusel === FuType.csr && info.op === CSROpType.ecall) {
+  when (valid && fusel === FuType.csr && op === CSROpType.ecall) {
     switch (io.mode) {
       is (Privilege.u) { ex_exc(ecallU) := true.B }
       is (Privilege.s) { ex_exc(ecallS) := true.B }
       is (Privilege.m) { ex_exc(ecallM) := true.B }
     }
   }
-
-  // TODO: valid
-  info       := decoder.out.info
-  info.valid := io.decodeStage.data.valid
 
   // Read ARegFile
   io.regfile.src1.raddr := info.src1_raddr

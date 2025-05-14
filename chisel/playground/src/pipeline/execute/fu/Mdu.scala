@@ -17,7 +17,6 @@ class Mdu extends Module {
   val rs    = io.src_info.src1_data
   val rt    = io.src_info.src2_data
 
-  // TODO: Rewrite with pad
   def W(x : UInt) = {
     val x32 = x(31, 0)
     Cat(Fill(32, x32(31)), x32)
@@ -28,14 +27,14 @@ class Mdu extends Module {
   when (valid) {
     switch (op) {
       is (MDUOpType.   mul) { res := rs * rt }
-      is (MDUOpType.  mulh) { res := (rs.asSInt * rt.asSInt)(127, 64) }
-      is (MDUOpType.mulhsu) { res := (rs.asSInt * rt).asSInt(127, 64) }
-      is (MDUOpType. mulhu) { res := (rs * rt)(127, 64) }
+      is (MDUOpType.  mulh) { res := (rs.asSInt * rt.asSInt)(XLEN * 2 - 1, XLEN) }
+      is (MDUOpType.mulhsu) { res := (rs.asSInt * rt).asSInt(XLEN * 2 - 1, XLEN) }
+      is (MDUOpType. mulhu) { res := (rs * rt)(XLEN * 2 - 1, XLEN) }
       is (MDUOpType.   div) {
         res := Mux(
           rt === 0.U,
           "hffffffffffffffff".U,
-          (rs.asSInt / rt.asSInt)(63, 0)
+          (rs.asSInt / rt.asSInt)(XLEN - 1, 0)
         )
       }
       is (MDUOpType.  divu) {
@@ -49,7 +48,7 @@ class Mdu extends Module {
         res := Mux(
           rt === 0.U,
           rs,
-          (rs.asSInt - rt.asSInt * (rs.asSInt / rt.asSInt))(63, 0)
+          (rs.asSInt - rt.asSInt * (rs.asSInt / rt.asSInt))(XLEN - 1, 0)
         )
       }
       is (MDUOpType.  remu) {

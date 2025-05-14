@@ -33,9 +33,9 @@ class MemoryUnit extends Module {
 
   when (valid && fusel === FuType.lsu && LSUOpType.isLoad(op)) {
     switch (op) {
-      is (LSUOpType. lb) { res := Cat(Fill(56, rdata( 7)), rdata( 7, 0)) }
-      is (LSUOpType. lh) { res := Cat(Fill(48, rdata(15)), rdata(15, 0)) }
-      is (LSUOpType. lw) { res := Cat(Fill(32, rdata(31)), rdata(31, 0)) }
+      is (LSUOpType. lb) { res := Cat(Fill(XLEN -  8, rdata( 7)), rdata( 7, 0)) }
+      is (LSUOpType. lh) { res := Cat(Fill(XLEN - 16, rdata(15)), rdata(15, 0)) }
+      is (LSUOpType. lw) { res := Cat(Fill(XLEN - 32, rdata(31)), rdata(31, 0)) }
       is (LSUOpType. ld) { res := rdata }
       is (LSUOpType.lbu) { res := rdata( 7, 0) }
       is (LSUOpType.lhu) { res := rdata(15, 0) }
