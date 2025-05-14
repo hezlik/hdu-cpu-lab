@@ -47,7 +47,7 @@ class DecodeUnit extends Module {
   }
 
   // Exception : illegalInst
-  when (info.valid && info.illegal) {
+  when (info.valid && !decoder.out.info.valid) {
     ex_exc(illegalInst)  := true.B
     ex_tval(illegalInst) := inst
   }

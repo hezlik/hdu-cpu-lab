@@ -25,11 +25,8 @@ class Lsu extends Module {
   val rt    = io.src_info.src2_data
   val addr  = io.src_info.src1_data + io.info.imm
 
-  val wen   = Wire(UInt(DATA_SRAM_WEN_WID.W))
-  val wdata = Wire(UInt(DATA_SRAM_DATA_WID.W))
-
-  wen   := 0.U
-  wdata := 0.U
+  val wen   = WireInit(0.U(DATA_SRAM_WEN_WID.W))
+  val wdata = WireInit(0.U(DATA_SRAM_DATA_WID.W))
 
   when (valid) {
     switch (op) {
@@ -52,9 +49,7 @@ class Lsu extends Module {
     }
 
     // Exception : storeAddrMisaligned & loadAddrMisaligned
-    val bit = Wire(UInt(SRAM_ADDR_WID.W))
-
-    bit := 0.U
+    val bit = WireInit(0.U(SRAM_ADDR_WID.W))
     
     switch (LSUOpType.exBit(op)) {
       is (LSUOpType.b) { bit := 0.U }

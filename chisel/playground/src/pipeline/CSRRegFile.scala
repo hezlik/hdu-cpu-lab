@@ -164,9 +164,7 @@ class CSRRegFile extends Module {
   io.mode := reg_mode
 
   // External Interruptions
-  val ex = Wire(new ExceptionInfo())
-  
-  ex := io.ex
+  val ex = WireInit(io.ex)
 
   when (io.ext_int.mei) { ex.interrupt(macExternalInterrupt) := true.B }
   when (io.ext_int.mti) { ex.interrupt(macTimerInterrupt) := true.B }
@@ -175,7 +173,7 @@ class CSRRegFile extends Module {
   // Handle Exceptions & Interuptions
   // Find the First Interrupt/Exception
   val excCases = Exceptionity.zipWithIndex.map { 
-    case (value, index) => 
+    case (value, index) =>
       ex.exception(value) -> value.U
   }
 
@@ -195,7 +193,6 @@ class CSRRegFile extends Module {
   val intNO = MuxCase(noInterrupt.U, intCases)
   val isInt = intNO =/= noInterrupt.U
   val cauNO = Mux(isInt, intNO, excNO).pad(XLEN)
-  val one   = 1.U(XLEN.W)
 
   // Handle the First Interrupt/Exception
   val flush  = WireInit(false.B)

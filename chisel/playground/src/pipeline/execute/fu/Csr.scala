@@ -37,9 +37,7 @@ class Csr extends Module {
 
   io.result := cdata
 
-  val wdata = Wire(UInt(XLEN.W))
-
-  wdata := 0.U
+  val wdata = WireInit(0.U(XLEN.W))
 
   when (valid) {
     switch (op){

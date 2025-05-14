@@ -30,13 +30,9 @@ class Bru extends Module {
   val imm    = io.info.imm
   val new_pc = pc + imm
 
-  val branch = Wire(Bool())
-  val target = Wire(UInt(XLEN.W))
-  val res    = Wire(UInt(XLEN.W))
-
-  branch := false.B
-  target := 0.U
-  res    := 0.U
+  val branch = WireInit(false.B)
+  val target = WireInit(0.U(XLEN.W))
+  val res    = WireInit(0.U(XLEN.W))
   
   when (valid) {
     switch (op){
@@ -95,8 +91,7 @@ class Bru extends Module {
     }
   }
 
-  io.result         := res
-
   io.ftcInfo.flush  := branch
   io.ftcInfo.target := target
+  io.result         := res
 }

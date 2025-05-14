@@ -17,14 +17,13 @@ class Alu extends Module {
   val rs    = io.src_info.src1_data
   val rt    = io.src_info.src2_data
 
+  // TODO: Rewrite with pad
   def W(x : UInt) = {
     val x32 = x(31, 0)
     Cat(Fill(32, x32(31)), x32)
   }
 
-  val res = Wire(UInt(XLEN.W))
-
-  res := 0.U
+  val res = WireInit(0.U(XLEN.W))
 
   when (valid) {
     switch (op) {

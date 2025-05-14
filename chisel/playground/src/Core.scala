@@ -15,8 +15,6 @@ class Core extends Module {
     val debug     = new DEBUG()
   })
 
-  // TODO: Wire -> WireInit
-
   // Stages & Units
   val fetchUnit      = Module(new FetchUnit()).io
   val decodeStage    = Module(new DecodeStage()).io

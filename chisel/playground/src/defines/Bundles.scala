@@ -39,9 +39,10 @@ class RdInfo extends Bundle {
 
 class Info extends Bundle {
   val valid      = Bool() // 用于标识当前流水级中的指令是否有效
+  val inst       = UInt(INST_WID.W)
+
   val fusel      = FuType()
   val op         = FuOpType()
-  val inst       = UInt(INST_WID.W)
 
   val src1_ren   = Bool()
   val src1_raddr = UInt(REG_ADDR_WID.W)
@@ -57,8 +58,6 @@ class Info extends Bundle {
   val csr        = UInt(VT_CSR_ADDR_WID.W)
   val is_csri    = Bool()
   val zimm       = UInt(XLEN.W)
-
-  val illegal    = Bool()
 }
 
 class SrcReadSignal extends Bundle {

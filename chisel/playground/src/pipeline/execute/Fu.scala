@@ -48,9 +48,7 @@ class Fu extends Module {
   io.ex_out          := io.ex_in
   io.mret            := false.B
 
-  val res = Wire(UInt(XLEN.W))
-
-  res := 0.U
+  val res = WireInit(0.U(XLEN.W))
   
   switch (io.data.info.fusel) {
     is (FuType.alu) {

@@ -23,16 +23,13 @@ class MemoryUnit extends Module {
 
   // Load Instructions
   val data  = io.memoryStage.data
-
   val valid = data.info.valid
   val fusel = data.info.fusel
   val op    = data.info.op
   val addr  = data.src_info.src1_data + data.info.imm
   val rdata = io.loadData >> (addr(2, 0) * 8.U)
 
-  val res   = Wire(UInt(XLEN.W))
-  
-  res := data.rd_info.wdata
+  val res   = WireInit(data.rd_info.wdata)
 
   when (valid && fusel === FuType.lsu && LSUOpType.isLoad(op)) {
     switch (op) {

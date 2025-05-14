@@ -27,27 +27,24 @@ class Decoder extends Module with HasInstrType {
 
   val (rs, rt, rd) = (inst(19, 15), inst(24, 20), inst(11, 7))
 
-  // TODO: Sort info
   io.out.info.valid      := instrType =/= InstrN
   io.out.info.inst       := inst
-  io.out.info.src1_raddr := rs
-  io.out.info.src2_raddr := rt
   io.out.info.op         := fuOpType
+  io.out.info.fusel      := fuType
+  io.out.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
+  io.out.info.src1_pcen  := (inst === RV32I_ALUInstr.AUIPC) || (instrType === InstrJ)
+  io.out.info.src1_raddr := rs
+  io.out.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
+  io.out.info.src2_raddr := rt
   io.out.info.reg_wen    := (instrType =/= InstrS) && (instrType =/= InstrB) && !(fuType === FuType.alu && fuOpType === ALUOpType.nop)
   io.out.info.reg_waddr  := rd
-  io.out.info.src1_ren   := (instrType =/= InstrU) && (instrType =/= InstrJ)
-  io.out.info.src2_ren   := (instrType =/= InstrI) && (instrType =/= InstrU) && (instrType =/= InstrJ)
-  io.out.info.src1_pcen  := (inst === RV32I_ALUInstr.AUIPC) || (instrType === InstrJ)
-  io.out.info.fusel      := fuType
   io.out.info.csr        := inst(31, 20)
   io.out.info.is_csri    := fuType === FuType.csr && CSROpType.isCSRI(inst)
   io.out.info.zimm       := inst(19, 15)
-  io.out.info.illegal    := instrType === InstrN
 
-  val imm = Wire(UInt(XLEN.W))
+  val imm = WireInit(0.U(XLEN.W))
 
-  imm := 0.U
-
+  // TODO: Rewrite with pad
   switch (instrType) {
     is (InstrI) {
       val imm12 = inst(31, 20)
@@ -72,5 +69,4 @@ class Decoder extends Module with HasInstrType {
   }
 
   io.out.info.imm := imm
-
 }

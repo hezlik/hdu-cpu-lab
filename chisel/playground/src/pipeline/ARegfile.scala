@@ -27,9 +27,9 @@ class ARegFile extends Module {
     val read  = Flipped(new Src12Read())
     val write = Flipped(new RegWrite())
   })
+  
   val regs = RegInit(VecInit(Seq.fill(AREG_NUM)(0.U(XLEN.W))))
   
-
   // Read
   io.read.src1.rdata := regs(io.read.src1.raddr)
   io.read.src2.rdata := regs(io.read.src2.raddr)
