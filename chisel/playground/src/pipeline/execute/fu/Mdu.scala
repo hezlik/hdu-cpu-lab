@@ -1,5 +1,3 @@
-// LAB3: MDU Module
-
 package cpu.pipeline
 
 import chisel3._
@@ -95,5 +93,4 @@ class Mdu extends Module {
   }
   
   io.result := res
-
 }

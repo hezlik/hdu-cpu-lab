@@ -9,15 +9,16 @@ import cpu.CpuConfig
 class WriteBackUnit extends Module {
   val io = IO(new Bundle {
     val writeBackStage = Input(new MemoryUnitWriteBackUnit())
-    val regfile        = Output(new RegWrite())
     val debug          = new DEBUG()
+
+    // Write ARegFile
+    val regfile        = Output(new RegWrite())
   })
 
   // 写回阶段完成数据的写回操作
   // 同时该阶段还负责差分测试的比对工作
-  // TODO: 完成WriteBackUnit模块的逻辑
 
-  // LAB1: WriteBack -> data -> Register
+  // Write ARegFile
   val info    = io.writeBackStage.data.info
   val rd_info = io.writeBackStage.data.rd_info
 
@@ -25,10 +26,9 @@ class WriteBackUnit extends Module {
   io.regfile.waddr := info.reg_waddr
   io.regfile.wdata := rd_info.wdata
 
-  // LAB1: Difftest : Commit Debug
+  // Commit Debug Information
   io.debug.commit   := info.valid
   io.debug.pc       := io.writeBackStage.data.pc
   io.debug.rf_wnum  := info.reg_waddr
   io.debug.rf_wdata := rd_info.wdata
-
 }

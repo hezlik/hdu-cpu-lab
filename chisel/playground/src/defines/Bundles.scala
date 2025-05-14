@@ -12,25 +12,16 @@ class ExtInterrupt extends Bundle {
   val msi = Bool()
 }
 
-// LAB6: CtrlSignal
 class CtrlSignal extends Bundle {
   val allow_to_go = Bool()
   val do_flush    = Bool()
 }
 
-// LAB5: FetchInfo
-// class FetchInfo extends Bundle {
-//   val branch = Bool()
-//   val target = UInt(XLEN.W)
-// }
-
-// LAB9: FetchInfo
 class FetchInfo extends Bundle {
   val flush  = Bool()
   val target = UInt(XLEN.W)
 }
 
-// LAB9: ExceptionInfo
 class ExceptionInfo extends Bundle {
   val exception = Vec(EXC_WID, Bool())
   val interrupt = Vec(INT_WID, Bool())
@@ -48,30 +39,26 @@ class RdInfo extends Bundle {
 
 class Info extends Bundle {
   val valid      = Bool() // 用于标识当前流水级中的指令是否有效
-  val src1_raddr = UInt(REG_ADDR_WID.W)
-  val src2_raddr = UInt(REG_ADDR_WID.W)
+  val fusel      = FuType()
   val op         = FuOpType()
+  val inst       = UInt(INST_WID.W)
+
+  val src1_ren   = Bool()
+  val src1_raddr = UInt(REG_ADDR_WID.W)
+  val src1_pcen  = Bool()
+
+  val src2_ren   = Bool()
+  val src2_raddr = UInt(REG_ADDR_WID.W)
+  val imm        = UInt(XLEN.W)
+
   val reg_wen    = Bool()
   val reg_waddr  = UInt(REG_ADDR_WID.W)
 
-  // LAB2: New Info
-  val src1_ren   = Bool()
-  val src2_ren   = Bool()
-  val imm        = UInt(XLEN.W)
-  val src1_pcen  = Bool()
-
-  // LAB3: New Info
-  val fusel      = FuType()
-
-  // LAB8: New Info
   val csr        = UInt(VT_CSR_ADDR_WID.W)
   val is_csri    = Bool()
   val zimm       = UInt(XLEN.W)
 
-  // LAB9: New Info
   val illegal    = Bool()
-  val inst       = UInt(INST_WID.W)
-  
 }
 
 class SrcReadSignal extends Bundle {

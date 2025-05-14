@@ -1,5 +1,3 @@
-// LAB4: LSU Module in Execute for Storage
-
 package cpu.pipeline
 
 import chisel3._
@@ -11,14 +9,15 @@ class Lsu extends Module {
   val io = IO(new Bundle {
     val info     = Input(new Info())
     val src_info = Input(new SrcInfo())
+
+    // Read & Write DataSRAM
     val dataSram = new DataSram()
 
-    // LAB9: Lsu New Interaction : ExceptionInfo
+    // Exceptions & Interruptions
     val ex_in     = Input(new ExceptionInfo())
     val ex_out    = Output(new ExceptionInfo())
   })
 
-  // LAB9: Lsu : Initialize ExceptionInfo
   io.ex_out := io.ex_in
 
   val valid = io.info.valid
@@ -52,7 +51,7 @@ class Lsu extends Module {
       }
     }
 
-    // LAB9: storeAddrMisaligned & loadAddrMisaligned
+    // Exception : storeAddrMisaligned & loadAddrMisaligned
     val bit = Wire(UInt(SRAM_ADDR_WID.W))
 
     bit := 0.U
@@ -80,5 +79,4 @@ class Lsu extends Module {
   io.dataSram.wen   := wen
   io.dataSram.addr  := addr
   io.dataSram.wdata := wdata
-
 }

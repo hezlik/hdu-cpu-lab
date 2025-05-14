@@ -1,5 +1,3 @@
-// LAB5: BRU Module
-
 package cpu.pipeline
 
 import chisel3._
@@ -9,18 +7,19 @@ import cpu.defines.Const._
 
 class Bru extends Module {
   val io = IO(new Bundle {
-    val info     = Input(new Info())
-    val src_info = Input(new SrcInfo())
-    val pc       = Input(UInt(XLEN.W))
-    val ftcInfo  = Output(new FetchInfo())
-    val result   = Output(UInt(XLEN.W))
+    val info      = Input(new Info())
+    val src_info  = Input(new SrcInfo())
+    val pc        = Input(UInt(XLEN.W))
+    val result    = Output(UInt(XLEN.W))
 
-    // LAB9: Bru New Interaction : ExceptionInfo
+    // Control Conflict : Commit ftcInfo
+    val ftcInfo   = Output(new FetchInfo())
+
+    // Exceptions & Interruptions
     val ex_in     = Input(new ExceptionInfo())
     val ex_out    = Output(new ExceptionInfo())
   })
 
-  // LAB9: Bru : Initialize ExceptionInfo
   io.ex_out := io.ex_in
   
   val valid  = io.info.valid
@@ -89,18 +88,15 @@ class Bru extends Module {
       }
     }
 
-    // LAB9: instAddrMisaligned
+    // Exception : instAddrMisaligned
     when (branch && target(1, 0) =/= "b00".U) {
       io.ex_out.exception(instAddrMisaligned) := true.B
       io.ex_out.tval(instAddrMisaligned)      := target
     }
   }
 
-  // io.ftcInfo.branch := branch
-  io.ftcInfo.target := target
   io.result         := res
 
-  // LAB9: Rename Fetch Info : branch -> flush
   io.ftcInfo.flush  := branch
-
+  io.ftcInfo.target := target
 }

@@ -1,5 +1,3 @@
-// LAB6F: WriteBackCtrl
-
 package cpu.pipeline
 
 import chisel3._
@@ -13,5 +11,4 @@ class WriteBackCtrl extends Module {
   })
 
   io.writeBackReady := true.B
-
 }

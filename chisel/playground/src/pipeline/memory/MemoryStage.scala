@@ -19,22 +19,15 @@ class ExecuteUnitMemoryUnit extends Bundle {
 
 class MemoryStage extends Module {
   val io = IO(new Bundle {
-    val executeUnit  = Input(new ExecuteUnitMemoryUnit())
-    val memoryUnit   = Output(new ExecuteUnitMemoryUnit())
-    // LAB6: New Input : executeCtrlSignal
+    val executeUnit       = Input(new ExecuteUnitMemoryUnit())
+    val memoryUnit        = Output(new ExecuteUnitMemoryUnit())
     val executeCtrlSignal = Input(new CtrlSignal())
   })
 
   val data = RegInit(0.U.asTypeOf(new ExeMemData()))
 
-  // TODO: 完成MemoryStage模块的逻辑
-  
-  // LAB6: executeCtrlSignal
   when (io.executeCtrlSignal.allow_to_go) { data := io.executeUnit.data }
   when (io.executeCtrlSignal.do_flush) { data.info.valid := false.B }
 
-  // LAB1: MemoryStage
-  // data := io.executeUnit.data
   io.memoryUnit.data := data
-  
 }

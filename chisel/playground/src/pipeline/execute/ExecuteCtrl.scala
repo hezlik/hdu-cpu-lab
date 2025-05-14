@@ -1,5 +1,3 @@
-// LAB6F: ExecuteCtrl
-
 package cpu.pipeline
 
 import chisel3._
@@ -19,8 +17,7 @@ class ExecuteCtrl extends Module {
   val flush = false.B
 
   io.executeCtrlSignal.allow_to_go := allow && ready
-  io.executeCtrlSignal.do_flush := flush || (!allow && ready)
+  io.executeCtrlSignal.do_flush    := flush || (!allow && ready)
 
   io.executeReady := io.executeCtrlSignal.allow_to_go
-
 }

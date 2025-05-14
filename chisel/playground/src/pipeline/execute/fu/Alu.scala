@@ -11,9 +11,7 @@ class Alu extends Module {
     val src_info = Input(new SrcInfo())
     val result   = Output(UInt(XLEN.W))
   })
-  // TODO: 完成ALU模块的逻辑
 
-  // LAB1: ALU
   val valid = io.info.valid
   val op    = io.info.op
   val rs    = io.src_info.src1_data
@@ -42,13 +40,6 @@ class Alu extends Module {
       is (ALUOpType. and) { res := rs & rt }
       is (ALUOpType.addw) { res := W(rs + rt) }
       is (ALUOpType.subw) { res := W(rs - rt) }
-      // is (ALUOpType.sllw) { res := W(rs << rt(5, 0)) }
-      // is (ALUOpType.srlw) { res := W(rs >> rt(5, 0)) }
-      // is (ALUOpType.sraw) { res := W((rs.asSInt >> rt(5, 0)).asUInt) }
-
-      // LAB2: LAB1 Wrong
-      // sllw & srlw & sraw : rt(5, 0) -> rt(4, 0)
-      // srlw & sraw        : rs -> rs(31, 0)
       is (ALUOpType.sllw) { res := W(rs << rt(4, 0)) }
       is (ALUOpType.srlw) { res := W(rs(31, 0) >> rt(4, 0)) }
       is (ALUOpType.sraw) { res := W((rs(31, 0).asSInt >> rt(4, 0)).asUInt) }
@@ -56,5 +47,4 @@ class Alu extends Module {
   }
 
   io.result := res
-
 }

@@ -25,22 +25,18 @@ trait Constants extends CoreParameter {
   val AREG_NUM     = 32
   val REG_ADDR_WID = 5
 
-  // LAB8: CSR RegFile
-  // val CREG_NUM        = 16
-  // val CSR_ADDR_WID    = 4
-  val VT_CSR_ADDR_WID = 12
-
-  // LAB9: CSR RegFile
+  // CSR RegFile
   val CREG_NUM        = 32
   val CSR_ADDR_WID    = 5
-
-  // LAB9: CSR Mode
+  val VT_CSR_ADDR_WID = 12
   val MODE_WID        = 2
 
 }
 
-// LAB9: HasExceptionNO
+// ExceptionNO
 trait HasExceptionNO extends Constants {
+  val noException         = 14
+
   val instAddrMisaligned  = 0
   val instAccessFault     = 1
   val illegalInst         = 2
@@ -55,8 +51,6 @@ trait HasExceptionNO extends Constants {
   val instPageFault       = 12
   val loadPageFault       = 13
   val storePageFault      = 15
-
-  val noException         = 14
 
   val Exceptionity = Seq(
     breakPoint,
@@ -76,16 +70,16 @@ trait HasExceptionNO extends Constants {
   )
 }
 
-// LAB9: HasInterruptNO
+// InterruptNO
 trait HasInterruptNO extends Constants {
+  val noInterrupt           = 10
+
   val svSoftwareInterrupt  = 1
   val macSoftwareInterrupt = 3
   val svTimerInterrupt     = 5
   val macTimerInterrupt    = 7
   val svExternalInterrupt  = 9
   val macExternalInterrupt = 11
-
-  val noInterrupt           = 10
 
   val Interruptionity = Seq(
     macExternalInterrupt,
@@ -104,15 +98,11 @@ trait SRAMConst extends Constants {
   val INST_SRAM_DATA_WID = INST_WID
   val INST_SRAM_WEN_WID  = INST_WID / 8
 }
-// object Const extends Constants with SRAMConst
 
-// LAB9: New Const : HasExceptionNO & HasInterruptNO
 object Const extends Constants with SRAMConst with HasExceptionNO with HasInterruptNO
 
 object Instructions extends HasInstrType with CoreParameter {
   def NOP           = 0x00000013.U
-  // val DecodeDefault = List(InstrN, FuType.alu, ALUOpType.add)
-  // LAB9: Undecodable instruction : add -> nop
   val DecodeDefault = List(InstrN, FuType.alu, ALUOpType.nop)
   def DecodeTable   = RVIInstr.table
 }

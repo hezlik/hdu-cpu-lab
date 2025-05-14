@@ -8,12 +8,14 @@ import cpu.defines._
 
 class FetchUnit extends Module {
   val io = IO(new Bundle {
-    val decodeStage = new FetchUnitDecodeUnit()
-    val instSram    = new InstSram()
-    // LAB5: FetchUnit New Input : ftcInfo : branch & target
-    val ftcInfo     = Input(new FetchInfo())
-    // LAB6: New Input : fetchCtrlSignal
+    val decodeStage     = new FetchUnitDecodeUnit()
     val fetchCtrlSignal = Input(new CtrlSignal())
+
+    // Read InstSRAM
+    val instSram        = new InstSram()
+    
+    // Control Conflict
+    val ftcInfo         = Input(new FetchInfo())
   })
 
   val boot :: send :: receive :: Nil = Enum(3)
@@ -30,25 +32,13 @@ class FetchUnit extends Module {
   }
 
   // 取指阶段完成指令的取指操作
-
   val pc = RegEnable(io.instSram.addr, (PC_INIT - 4.U), state =/= boot)
 
   io.instSram.addr := pc + 4.U
 
-  // LAB6: fetchCtrlSignal
-  when (!io.fetchCtrlSignal.allow_to_go) {
-    io.instSram.addr := pc
-  }
-
-  // LAB5: FetchUnit : update pc_next
-  // when (io.ftcInfo.branch) {
-  //   io.instSram.addr := io.ftcInfo.target
-  // }
-
-  // LAB9: Rename Fetch Info : branch -> flush
-  when (io.ftcInfo.flush) {
-    io.instSram.addr := io.ftcInfo.target
-  }
+  // Control Conflict : ftcInfo
+  when (!io.fetchCtrlSignal.allow_to_go) { io.instSram.addr := pc }
+  when (io.ftcInfo.flush) { io.instSram.addr := io.ftcInfo.target }
 
   io.decodeStage.data.valid := state === receive
   io.decodeStage.data.pc    := pc
@@ -57,5 +47,4 @@ class FetchUnit extends Module {
   io.instSram.en    := !reset.asBool
   io.instSram.wen   := 0.U
   io.instSram.wdata := 0.U
-  
 }

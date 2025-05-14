@@ -1,5 +1,3 @@
-// LAB6F: MemoryCtrl
-
 package cpu.pipeline
 
 import chisel3._
@@ -19,8 +17,7 @@ class MemoryCtrl extends Module {
   val flush = false.B
 
   io.memoryCtrlSignal.allow_to_go := allow && ready
-  io.memoryCtrlSignal.do_flush := flush || (!allow && ready)
+  io.memoryCtrlSignal.do_flush    := flush || (!allow && ready)
 
   io.memoryReady := io.memoryCtrlSignal.allow_to_go
-
 }

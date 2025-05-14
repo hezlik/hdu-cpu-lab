@@ -4,7 +4,6 @@ import chisel3._
 import chisel3.util._
 
 object RV32I_ALUInstr extends HasInstrType with CoreParameter {
-  
   def ADDI = BitPat("b????????????_?????_000_?????_0010011")
   def SLLI = if (XLEN == 32) BitPat("b0000000?????_?????_001_?????_0010011")
   else BitPat("b000000??????_?????_001_?????_0010011")
@@ -36,21 +35,17 @@ object RV32I_ALUInstr extends HasInstrType with CoreParameter {
   val table = Array(
     // ADD指令将被解析为InstrR类型的指令，功能单元类型为alu，功能单元操作类型为add
     // ADD -> List(InstrR, FuType.alu, ALUOpType.add)
-    // TODO: 完成其他指令的解析
+    ADD   -> List(InstrR, FuType.alu, ALUOpType.add),
+    SLL   -> List(InstrR, FuType.alu, ALUOpType.sll),
+    SLT   -> List(InstrR, FuType.alu, ALUOpType.slt),
+    SLTU  -> List(InstrR, FuType.alu, ALUOpType.sltu),
+    XOR   -> List(InstrR, FuType.alu, ALUOpType.xor),
+    SRL   -> List(InstrR, FuType.alu, ALUOpType.srl),
+    OR    -> List(InstrR, FuType.alu, ALUOpType.or),
+    AND   -> List(InstrR, FuType.alu, ALUOpType.and),
+    SUB   -> List(InstrR, FuType.alu, ALUOpType.sub),
+    SRA   -> List(InstrR, FuType.alu, ALUOpType.sra),
 
-    // LAB1: RV32I_ALUInstr : R type
-    ADD  -> List(InstrR, FuType.alu, ALUOpType.add),
-    SLL  -> List(InstrR, FuType.alu, ALUOpType.sll),
-    SLT  -> List(InstrR, FuType.alu, ALUOpType.slt),
-    SLTU -> List(InstrR, FuType.alu, ALUOpType.sltu),
-    XOR  -> List(InstrR, FuType.alu, ALUOpType.xor),
-    SRL  -> List(InstrR, FuType.alu, ALUOpType.srl),
-    OR   -> List(InstrR, FuType.alu, ALUOpType.or),
-    AND  -> List(InstrR, FuType.alu, ALUOpType.and),
-    SUB  -> List(InstrR, FuType.alu, ALUOpType.sub),
-    SRA  -> List(InstrR, FuType.alu, ALUOpType.sra),
-
-    // LAB2: RV32I_ALUInstr : I type
     ADDI  -> List(InstrI, FuType.alu, ALUOpType.add),
     SLLI  -> List(InstrI, FuType.alu, ALUOpType.sll),
     SLTI  -> List(InstrI, FuType.alu, ALUOpType.slt),
@@ -61,16 +56,12 @@ object RV32I_ALUInstr extends HasInstrType with CoreParameter {
     ANDI  -> List(InstrI, FuType.alu, ALUOpType.and),
     SRAI  -> List(InstrI, FuType.alu, ALUOpType.sra),
 
-    // LAB2: RV32I_ALUInstr : U type
     AUIPC -> List(InstrU, FuType.alu, ALUOpType.add),
     LUI   -> List(InstrU, FuType.alu, ALUOpType.add),
-
   )
-
 }
 
 object RV64IInstr extends HasInstrType {
-  
   def ADDIW = BitPat("b???????_?????_?????_000_?????_0011011")
   def SLLIW = BitPat("b0000000_?????_?????_001_?????_0011011")
   def SRLIW = BitPat("b0000000_?????_?????_101_?????_0011011")
@@ -82,40 +73,31 @@ object RV64IInstr extends HasInstrType {
   def SUBW  = BitPat("b0100000_?????_?????_000_?????_0111011")
 
   val table = Array(
-    // TODO: 完成RV64I指令集的解析
-
-    // LAB1: RV64IInstr : R type
     SLLW -> List(InstrR, FuType.alu, ALUOpType.sllw),
     SRLW -> List(InstrR, FuType.alu, ALUOpType.srlw),
     SRAW -> List(InstrR, FuType.alu, ALUOpType.sraw),
     ADDW -> List(InstrR, FuType.alu, ALUOpType.addw),
     SUBW -> List(InstrR, FuType.alu, ALUOpType.subw),
 
-    // LAB2: RV64IInstr : I type
     SLLIW -> List(InstrI, FuType.alu, ALUOpType.sllw),
     SRLIW -> List(InstrI, FuType.alu, ALUOpType.srlw),
     SRAIW -> List(InstrI, FuType.alu, ALUOpType.sraw),
     ADDIW -> List(InstrI, FuType.alu, ALUOpType.addw),
-
   )
-
 }
 
-// LAB3: RV32MInstr
 object RV32MInstr extends HasInstrType with CoreParameter {
-  
   def MUL    = BitPat("b0000001_?????_?????_000_?????_0110011")
   def MULH   = BitPat("b0000001_?????_?????_001_?????_0110011")
   def MULHSU = BitPat("b0000001_?????_?????_010_?????_0110011")
   def MULHU  = BitPat("b0000001_?????_?????_011_?????_0110011")
-  
+
   def DIV    = BitPat("b0000001_?????_?????_100_?????_0110011")
   def DIVU   = BitPat("b0000001_?????_?????_101_?????_0110011")
   def REM    = BitPat("b0000001_?????_?????_110_?????_0110011")
   def REMU   = BitPat("b0000001_?????_?????_111_?????_0110011")
 
   val table = Array(
-
     MUL    -> List(InstrR, FuType.mdu, MDUOpType.mul),
     MULH   -> List(InstrR, FuType.mdu, MDUOpType.mulh),
     MULHSU -> List(InstrR, FuType.mdu, MDUOpType.mulhsu),
@@ -125,37 +107,28 @@ object RV32MInstr extends HasInstrType with CoreParameter {
     DIVU   -> List(InstrR, FuType.mdu, MDUOpType.divu),
     REM    -> List(InstrR, FuType.mdu, MDUOpType.rem),
     REMU   -> List(InstrR, FuType.mdu, MDUOpType.remu),
-
   )
-
 }
 
-// LAB3: RV64MInstr
 object RV64MInstr extends HasInstrType with CoreParameter {
-
   def MULW  = BitPat("b0000001_?????_?????_000_?????_0111011")
-  
+
   def DIVW  = BitPat("b0000001_?????_?????_100_?????_0111011")
   def DIVUW = BitPat("b0000001_?????_?????_101_?????_0111011")
   def REMW  = BitPat("b0000001_?????_?????_110_?????_0111011")
   def REMUW = BitPat("b0000001_?????_?????_111_?????_0111011")
 
   val table = Array(
-
     MULW  -> List(InstrR, FuType.mdu, MDUOpType.mulw),
-    
+
     DIVW  -> List(InstrR, FuType.mdu, MDUOpType.divw),
     DIVUW -> List(InstrR, FuType.mdu, MDUOpType.divuw),
     REMW  -> List(InstrR, FuType.mdu, MDUOpType.remw),
     REMUW -> List(InstrR, FuType.mdu, MDUOpType.remuw),
-
   )
-  
 }
 
-// LAB4: RV32I_LSUInstr
 object RV32I_LSUInstr extends HasInstrType with CoreParameter {
-  
   def LB  = BitPat("b????????????_?????_000_?????_0000011")
   def LH  = BitPat("b????????????_?????_001_?????_0000011")
   def LW  = BitPat("b????????????_?????_010_?????_0000011")
@@ -170,7 +143,6 @@ object RV32I_LSUInstr extends HasInstrType with CoreParameter {
   def SD  = BitPat("b???????_?????_?????_011_?????_0100011")
 
   val table = Array(
-
     LB  -> List(InstrI, FuType.lsu, LSUOpType.lb),
     LH  -> List(InstrI, FuType.lsu, LSUOpType.lh),
     LW  -> List(InstrI, FuType.lsu, LSUOpType.lw),
@@ -183,14 +155,10 @@ object RV32I_LSUInstr extends HasInstrType with CoreParameter {
     SH  -> List(InstrS, FuType.lsu, LSUOpType.sh),
     SW  -> List(InstrS, FuType.lsu, LSUOpType.sw),
     SD  -> List(InstrS, FuType.lsu, LSUOpType.sd),
-
   )
-
 }
 
-// LAB5: RV32I_BRUInstr
 object RV32I_BRUInstr extends HasInstrType with CoreParameter {
-
   def BEQ  = BitPat("b???????_?????_?????_000_?????_1100011")
   def BNE  = BitPat("b???????_?????_?????_001_?????_1100011")
   def BLT  = BitPat("b???????_?????_?????_100_?????_1100011")
@@ -202,7 +170,6 @@ object RV32I_BRUInstr extends HasInstrType with CoreParameter {
   def JALR = BitPat("b????????????_?????_000_?????_1100111")
 
   val table = Array(
-
     BEQ  -> List(InstrB, FuType.bru, BRUOpType.beq),
     BNE  -> List(InstrB, FuType.bru, BRUOpType.bne),
     BLT  -> List(InstrB, FuType.bru, BRUOpType.blt),
@@ -212,14 +179,10 @@ object RV32I_BRUInstr extends HasInstrType with CoreParameter {
 
     JAL  -> List(InstrJ, FuType.bru, BRUOpType.jal),
     JALR -> List(InstrI, FuType.bru, BRUOpType.jalr),
-
   )
-
 }
 
-// LAB8: RV32I_CSRInstr
 object RV32I_CSRInstr extends HasInstrType with CoreParameter {
-
   def CSRRW  = BitPat("b????????????_?????_001_?????_1110011")
   def CSRRS  = BitPat("b????????????_?????_010_?????_1110011")
   def CSRRC  = BitPat("b????????????_?????_011_?????_1110011")
@@ -227,7 +190,6 @@ object RV32I_CSRInstr extends HasInstrType with CoreParameter {
   def CSRRSI = BitPat("b????????????_?????_110_?????_1110011")
   def CSRRCI = BitPat("b????????????_?????_111_?????_1110011")
 
-  // LAB9: CSR New Instructions BitPat : ecall, ebreak, mret, fence, wfi
   def ECALL  = BitPat("b000000000000_00000_000_00000_1110011")
   def EBREAK = BitPat("b000000000001_00000_000_00000_1110011")
   def MRET   = BitPat("b0011000_00010_00000_000_00000_1110011")
@@ -235,7 +197,6 @@ object RV32I_CSRInstr extends HasInstrType with CoreParameter {
   def WFI    = BitPat("b0001000_00101_00000_000_00000_1110011")
 
   val table = Array(
-
     CSRRW  -> List(InstrI, FuType.csr, CSROpType.csrrw),
     CSRRS  -> List(InstrI, FuType.csr, CSROpType.csrrs),
     CSRRC  -> List(InstrI, FuType.csr, CSROpType.csrrc),
@@ -243,27 +204,22 @@ object RV32I_CSRInstr extends HasInstrType with CoreParameter {
     CSRRSI -> List(InstrI, FuType.csr, CSROpType.csrrs),
     CSRRCI -> List(InstrI, FuType.csr, CSROpType.csrrc),
 
-    // LAB9: CSR New Instructions table : ecall, ebreak, mret, fence, wfi
     ECALL  -> List(InstrI, FuType.csr, CSROpType.ecall),
     EBREAK -> List(InstrI, FuType.csr, CSROpType.ebreak),
     MRET   -> List(InstrR, FuType.csr, CSROpType.mret),
     FENCE  -> List(InstrI, FuType.alu, ALUOpType.nop),
     WFI    -> List(InstrR, FuType.alu, ALUOpType.nop),
-
   )
-
 }
 
 object RVIInstr extends CoreParameter {
-  val table = RV32I_ALUInstr.table ++
+  val table = (
+    RV32I_ALUInstr.table ++
     (if (XLEN == 64) RV64IInstr.table else Array.empty) ++
-    // LAB3: RVIInstr : RV32MInstr & RV64MInstr
     RV32MInstr.table ++
     (if (XLEN == 64) RV64MInstr.table else Array.empty) ++
-    // LAB4: RVIInstr : RV32I_LSUInstr
     RV32I_LSUInstr.table ++
-    // LAB5: RVIInstr : RV32I_BRUInstr
     RV32I_BRUInstr.table ++
-    // LAB8: RVIInstr : RV32I_CSRInstr
     RV32I_CSRInstr.table
+  )
 }

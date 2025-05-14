@@ -1,5 +1,3 @@
-// LAB6F: FetchCtrl
-
 package cpu.pipeline
 
 import chisel3._
@@ -12,17 +10,16 @@ class FetchCtrl extends Module {
     val decodeReady     = Input(Bool())
     val fetchCtrlSignal = Output(new CtrlSignal())
 
+    // Control Conflict : Accept ftcInfo
     val ftcInfo         = Input(new FetchInfo())
   })
 
   val ready = io.decodeReady
   val allow = true.B
-  // val flush = io.ftcInfo.branch
 
-  // LAB9: Rename Fetch Info : branch -> flush
+  // Control Conflict : Accept ftcInfo
   val flush = io.ftcInfo.flush
 
   io.fetchCtrlSignal.allow_to_go := allow && ready
-  io.fetchCtrlSignal.do_flush := flush || (!allow && ready)
-
+  io.fetchCtrlSignal.do_flush    := flush || (!allow && ready)
 }

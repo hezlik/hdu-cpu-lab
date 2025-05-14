@@ -1,5 +1,3 @@
-// LAB8: CSR Module
-
 package cpu.pipeline
 
 import chisel3._
@@ -13,23 +11,24 @@ class Csr extends Module {
     val src_info  = Input(new SrcInfo())
     val result    = Output(UInt(XLEN.W))
 
+    // Read & Write CSRRegFile
     val csr_read  = new CsrRead()
     val csr_write = new CsrWrite()
 
-    // LAB9: Csr New Interaction : ExceptionInfo & mret
+    // Exceptions & Interruptions 
     val ex_in     = Input(new ExceptionInfo())
     val ex_out    = Output(new ExceptionInfo())
     val mret      = Output(new Bool())
   })
 
-  // LAB9: Csr : Initialize ExceptionInfo & mret
   io.ex_out := io.ex_in
   io.mret   := false.B
 
   io.csr_read.raddr  := io.info.csr
-
-  // io.csr_write.wen   := false.B
   io.csr_write.waddr := io.info.csr
+
+  io.csr_read.ren  := false.B
+  io.csr_write.wen := false.B
 
   val valid = io.info.valid
   val op    = io.info.op
@@ -42,14 +41,7 @@ class Csr extends Module {
 
   wdata := 0.U
 
-  // LAB9: Initialize ren & wen
-  io.csr_read.ren  := false.B
-  io.csr_write.wen := false.B
-
   when (valid) {
-
-    // io.csr_write.wen := true.B
-
     switch (op){
       is (CSROpType.csrrw) { wdata := rs }
       is (CSROpType.csrrs) { wdata := cdata | rs }
@@ -57,7 +49,7 @@ class Csr extends Module {
       is (CSROpType.mret) { io.mret := true.B }
     }
 
-    // LAB9: illegalInst : read / write csr
+    // Exception : illegalInst : read / write csr
     val waddr   = io.info.reg_waddr
     val is_csri = io.info.is_csri
     val zimm    = io.info.zimm
@@ -84,9 +76,7 @@ class Csr extends Module {
       io.ex_out.exception(illegalInst) := true.B
       io.ex_out.tval(illegalInst)      := inst
     }
-
   }
 
   io.csr_write.wdata := wdata
-
 }

@@ -12,17 +12,16 @@ class MemoryUnit extends Module {
     val memoryStage    = Input(new ExecuteUnitMemoryUnit())
     val writeBackStage = Output(new MemoryUnitWriteBackUnit())
 
-    // LAB4: MemoryUnit : Input loadData
+    // Read DataSRAM
     val loadData       = Input(UInt(XLEN.W))
   })
 
   // 访存阶段完成指令的访存操作
-
   io.writeBackStage.data.pc                        := io.memoryStage.data.pc
   io.writeBackStage.data.info                      := io.memoryStage.data.info
   io.writeBackStage.data.rd_info.wdata             := io.memoryStage.data.rd_info.wdata
 
-  // LAB4: MemoryUnit : Finish Load
+  // Load Instructions
   val data  = io.memoryStage.data
 
   val valid = data.info.valid
@@ -48,5 +47,4 @@ class MemoryUnit extends Module {
   }
   
   io.writeBackStage.data.rd_info.wdata := res
-
 }
