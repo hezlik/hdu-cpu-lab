@@ -142,15 +142,9 @@ object CSRAddr {
   def mcause     = "b0011_0100_0010"
   def mtval      = "b0011_0100_0011"
   def mip        = "b0011_0100_0100"
-  
-  def satp       = "b0001_0100_0000"
-
-  def pmpcfg0    = "b0011_0110_0000"
-  def pmpaddr0   = "b0011_0111_0000"
 
   def tselect    = "b0111_1010_0000"
   def tdata1     = "b0111_1010_0001"
-  def tdata2     = "b0111_1010_0010"
 
   def apply() = UInt(VT_CSR_ADDR_WID.W)
 

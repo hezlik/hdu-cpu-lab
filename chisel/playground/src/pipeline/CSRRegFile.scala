@@ -90,14 +90,9 @@ class CSRRegFile extends Module {
     BitPat(CSRAddr.mcause)     -> List(mcause.U,     "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     BitPat(CSRAddr.mtval)      -> List(mtval.U,      "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     BitPat(CSRAddr.mip)        -> List(mip.U,        "hFFFFFFFF_FFFFFFFF".U, "h00000000_00000888".U),
-    
-    BitPat(CSRAddr.satp)       -> List(satp.U,       "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
-    BitPat(CSRAddr.pmpcfg0)    -> List(pmpcfg0.U,    "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
-    BitPat(CSRAddr.pmpaddr0)   -> List(pmpaddr0.U,   "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
-    
+
     BitPat(CSRAddr.tselect)    -> List(tselect.U,    "hFFFFFFFF_FFFFFFFF".U, "h00000000_00000000".U),
-    BitPat(CSRAddr.tdata1)     -> List(tdata1.U,     "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
-    BitPat(CSRAddr.tdata2)     -> List(tdata2.U,     "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
+    BitPat(CSRAddr.tdata1)     -> List(tdata1.U,     "hFFFFFFFF_FFFFFFFF".U, "h00000000_00000000".U),
   )
 
   // Initialize Registers

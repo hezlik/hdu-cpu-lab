@@ -841,8 +841,8 @@ Csr -> DecodeUnit         : interrupt 交给 DecodeUnit
 
 1. 中断有响应条件。
 2. `mstatus` 要写好几个位，和 lab8 中的写 csr 寄存器堆的办法相同，且注意不要对位不足的写掩码做与操作，位不足的写掩码可以用 `pad` 函数实现高位填充零的位扩展后再取反扩充位。
-3. 出现了几个额外的寄存器 `satp, medeleg, mideleg, pmpcfg0, pmpaddr0, tselect, tdata1, tdata2` 需要多写。
-4. `tselect` 有初值 `h00000000_00000001` 和写掩码 `h00000000_00000000`。
+3. 出现了几个额外的寄存器 `medeleg, mideleg, tselect, tdata1` 需要多写。
+4. `tselect` 有初值 `h00000000_00000001` 和写掩码 `h00000000_00000000`，`tdata1` 有写掩码 `h00000000_00000000`。
 5. 然而 ` medeleg, mideleg` 这两个寄存器在不实现 `S` 模式的机器上不应该出现，所以出现了应该当异常跳过。
 6. 有初始值的几个 csr 寄存器应该在隐式复位信号 `reset` 为真的时候赋初值而不是每次都赋初值，而且直接写 `when (reset.asBool)` 会被 `RegInit` 覆盖，需要直接在 `RegInit` 中处理，这在 lab8 中没被卡出来。
 7. `DecodeUnit` 的 `info.valid` 逻辑不包括 `Decoder` 中传出来的 `valid` 而直接赋值为 `DecodeStage` 中传过来的 `valid`，这是因为无法识别的指令应该直接触发异常，所以我把无法识别的指令重定向到 `nop` 了。
