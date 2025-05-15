@@ -10,15 +10,15 @@ class FetchCtrl extends Module {
     val decodeReady     = Input(Bool())
     val fetchCtrlSignal = Output(new CtrlSignal())
 
-    // Control Conflict : Accept ftcInfo
-    val ftcInfo         = Input(new FetchInfo())
+    // Control Conflict : Accept ftc_info
+    val ftc_info        = Input(new FetchInfo())
   })
 
   val ready = io.decodeReady
   val allow = true.B
 
-  // Control Conflict : Accept ftcInfo
-  val flush = io.ftcInfo.flush
+  // Control Conflict : Accept ftc_info
+  val flush = io.ftc_info.flush
 
   io.fetchCtrlSignal.allow_to_go := allow && ready
   io.fetchCtrlSignal.do_flush    := flush || (!allow && ready)

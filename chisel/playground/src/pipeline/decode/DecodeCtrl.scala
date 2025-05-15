@@ -12,7 +12,7 @@ class DecodeCtrl extends Module {
     val decodeCtrlSignal = Output(new CtrlSignal())
 
     // Contral Conflict
-    val ftcInfo          = Input(new FetchInfo())
+    val ftc_info         = Input(new FetchInfo())
 
     // Data Conflict (Read after Write)
     val decodeInfo       = Input(new Info())
@@ -34,8 +34,8 @@ class DecodeCtrl extends Module {
     ))
   )
 
-  // Control Conflict : ftcInfo
-  val flush = io.ftcInfo.flush
+  // Control Conflict : Accept ftc_info
+  val flush = io.ftc_info.flush
 
   io.decodeCtrlSignal.allow_to_go := allow && ready
   io.decodeCtrlSignal.do_flush    := flush || (!allow && ready)

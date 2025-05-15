@@ -14,11 +14,11 @@ class Lsu extends Module {
     val dataSram = new DataSram()
 
     // Exceptions & Interruptions
-    val ex_in     = Input(new ExceptionInfo())
-    val ex_out    = Output(new ExceptionInfo())
+    val old_ex    = Input(new ExceptionInfo())
+    val new_ex    = Output(new ExceptionInfo())
   })
 
-  io.ex_out := io.ex_in
+  io.new_ex := io.old_ex
 
   val valid = io.info.valid
   val op    = io.info.op
@@ -61,11 +61,11 @@ class Lsu extends Module {
     when (bit =/= 0.U) {
       wen := false.B
       when (LSUOpType.isStore(op)) {
-        io.ex_out.exception(storeAddrMisaligned) := true.B
-        io.ex_out.tval(storeAddrMisaligned)      := addr
+        io.new_ex.exception(storeAddrMisaligned) := true.B
+        io.new_ex.tval(storeAddrMisaligned)      := addr
       }.otherwise {
-        io.ex_out.exception(loadAddrMisaligned) := true.B
-        io.ex_out.tval(loadAddrMisaligned)      := addr
+        io.new_ex.exception(loadAddrMisaligned) := true.B
+        io.new_ex.tval(loadAddrMisaligned)      := addr
       }
     }
   }

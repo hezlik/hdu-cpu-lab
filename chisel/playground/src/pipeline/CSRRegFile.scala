@@ -36,7 +36,7 @@ class CSRRegFile extends Module {
     val ex        = Input(new ExceptionInfo())
     val mret      = Input(Bool())
     val pc        = Input(UInt(XLEN.W))
-    val ftcInfo   = Output(new FetchInfo())
+    val ftc_info  = Output(new FetchInfo())
     val interrupt = Output(Vec(INT_WID, Bool()))
   })
 
@@ -262,8 +262,8 @@ class CSRRegFile extends Module {
       (mprv_new         << 17)
   }
 
-  io.ftcInfo.flush  := flush
-  io.ftcInfo.target := target
+  io.ftc_info.flush  := flush
+  io.ftc_info.target := target
 
   // interrupt -> DecodeUnit
   io.interrupt := VecInit(Seq.fill(INT_WID)(false.B))

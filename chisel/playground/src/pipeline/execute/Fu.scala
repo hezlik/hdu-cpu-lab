@@ -16,10 +16,10 @@ class Fu extends Module {
     }
 
     // Read & Write DataSRAM
-    val dataSram = new DataSram()
+    val dataSram  = new DataSram()
 
-    // Control Conflict : Commit ftcInfo
-    val ftcInfo  = Output(new FetchInfo())
+    // Control Conflict : Commit ftc_info
+    val ftc_info  = Output(new FetchInfo())
 
     // Read & Write CSRRegFile
     val csr_read  = new CsrRead()
@@ -27,8 +27,8 @@ class Fu extends Module {
     val mode      = Input(UInt(MODE_WID.W))
 
     // Exceptions & Interruptions
-    val ex_in     = Input(new ExceptionInfo())
-    val ex_out    = Output(new ExceptionInfo())
+    val old_ex    = Input(new ExceptionInfo())
+    val new_ex    = Output(new ExceptionInfo())
     val mret      = Output(Bool())
   })
 
@@ -37,8 +37,8 @@ class Fu extends Module {
   io.dataSram.wdata  := DontCare
   io.dataSram.wen    := 0.U
 
-  io.ftcInfo.target  := 0.U
-  io.ftcInfo.flush   := 0.U
+  io.ftc_info.target := 0.U
+  io.ftc_info.flush  := 0.U
 
   io.csr_read.ren    := false.B
   io.csr_read.raddr  := 0.U
@@ -46,7 +46,7 @@ class Fu extends Module {
   io.csr_write.waddr := 0.U
   io.csr_write.wdata := 0.U
 
-  io.ex_out          := io.ex_in
+  io.new_ex          := io.old_ex
   io.mret            := false.B
 
   val res = WireInit(0.U(XLEN.W))
@@ -68,17 +68,17 @@ class Fu extends Module {
       lsu.info      := io.data.info
       lsu.src_info  := io.data.src_info
       lsu.dataSram  <> io.dataSram
-      lsu.ex_in     <> io.ex_in
-      lsu.ex_out    <> io.ex_out
+      lsu.old_ex    <> io.old_ex
+      lsu.new_ex    <> io.new_ex
     }
     is (FuType.bru) {
       val bru = Module(new Bru()).io
       bru.info      := io.data.info
       bru.src_info  := io.data.src_info
       bru.pc        := io.data.pc
-      bru.ex_in     <> io.ex_in
-      bru.ex_out    <> io.ex_out
-      bru.ftcInfo   <> io.ftcInfo
+      bru.old_ex    <> io.old_ex
+      bru.new_ex    <> io.new_ex
+      bru.ftc_info  <> io.ftc_info
       res           := bru.result
     }
     is (FuType.csr) {
@@ -88,8 +88,8 @@ class Fu extends Module {
       csr.csr_read  <> io.csr_read
       csr.csr_write <> io.csr_write
       csr.mode      <> io.mode
-      csr.ex_in     <> io.ex_in
-      csr.ex_out    <> io.ex_out
+      csr.old_ex    <> io.old_ex
+      csr.new_ex    <> io.new_ex
       csr.mret      <> io.mret
       res           := csr.result
     }

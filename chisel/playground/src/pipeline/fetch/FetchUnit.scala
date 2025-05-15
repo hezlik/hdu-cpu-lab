@@ -15,7 +15,7 @@ class FetchUnit extends Module {
     val instSram        = new InstSram()
     
     // Control Conflict
-    val ftcInfo         = Input(new FetchInfo())
+    val ftc_info        = Input(new FetchInfo())
   })
 
   val boot :: send :: receive :: Nil = Enum(3)
@@ -36,9 +36,9 @@ class FetchUnit extends Module {
 
   io.instSram.addr := pc + 4.U
 
-  // Control Conflict : ftcInfo
+  // Control Conflict : ftc_info
   when (!io.fetchCtrlSignal.allow_to_go) { io.instSram.addr := pc }
-  when (io.ftcInfo.flush) { io.instSram.addr := io.ftcInfo.target }
+  when (io.ftc_info.flush) { io.instSram.addr := io.ftc_info.target }
 
   io.decodeStage.data.valid := state === receive
   io.decodeStage.data.pc    := pc

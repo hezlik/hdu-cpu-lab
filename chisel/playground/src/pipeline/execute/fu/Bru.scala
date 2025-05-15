@@ -12,15 +12,15 @@ class Bru extends Module {
     val pc        = Input(UInt(XLEN.W))
     val result    = Output(UInt(XLEN.W))
 
-    // Control Conflict : Commit ftcInfo
-    val ftcInfo   = Output(new FetchInfo())
+    // Control Conflict : Commit ftc_info
+    val ftc_info  = Output(new FetchInfo())
 
     // Exceptions & Interruptions
-    val ex_in     = Input(new ExceptionInfo())
-    val ex_out    = Output(new ExceptionInfo())
+    val old_ex    = Input(new ExceptionInfo())
+    val new_ex    = Output(new ExceptionInfo())
   })
 
-  io.ex_out := io.ex_in
+  io.new_ex := io.old_ex
   
   val valid  = io.info.valid
   val op     = io.info.op
@@ -86,12 +86,12 @@ class Bru extends Module {
 
     // Exception : instAddrMisaligned
     when (branch && target(1, 0) =/= "b00".U) {
-      io.ex_out.exception(instAddrMisaligned) := true.B
-      io.ex_out.tval(instAddrMisaligned)      := target
+      io.new_ex.exception(instAddrMisaligned) := true.B
+      io.new_ex.tval(instAddrMisaligned)      := target
     }
   }
 
-  io.ftcInfo.flush  := branch
-  io.ftcInfo.target := target
-  io.result         := res
+  io.ftc_info.flush  := branch
+  io.ftc_info.target := target
+  io.result          := res
 }

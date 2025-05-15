@@ -41,7 +41,7 @@ class Core extends Module {
   // Fetch -> Decode -> Execute -> Memory -> WriteBack
   // TODO: Split ExceptionUnit
   fetchUnit.decodeStage <> decodeStage.fetchUnit
-  executeUnit.ftcInfo <> fetchUnit.ftcInfo
+  executeUnit.ftc_info <> fetchUnit.ftc_info
   decodeStage.decodeUnit <> decodeUnit.decodeStage
   decodeUnit.executeStage <> executeStage.decodeUnit
   executeStage.executeUnit <> executeUnit.executeStage
@@ -67,7 +67,7 @@ class Core extends Module {
   executeUnit.ex <> csrfile.ex
   executeUnit.mret <> csrfile.mret
   executeUnit.pc <> csrfile.pc
-  executeUnit.csr_ftcInfo <> csrfile.ftcInfo
+  executeUnit.csr_ftc_info <> csrfile.ftc_info
   decodeUnit.interrupt <> csrfile.interrupt
 
   // InstSram
@@ -90,9 +90,9 @@ class Core extends Module {
   executeCtrl.executeCtrlSignal <> memoryStage.executeCtrlSignal
   memoryCtrl.memoryCtrlSignal <> writeBackStage.memoryCtrlSignal
 
-  // Control Conflicts : Excute -> ftcInfo -> Fetch, Decode
-  fetchCtrl.ftcInfo <> executeUnit.ftcInfo
-  decodeCtrl.ftcInfo <> executeUnit.ftcInfo
+  // Control Conflicts : Excute -> ftc_info -> Fetch, Decode
+  fetchCtrl.ftc_info <> executeUnit.ftc_info
+  decodeCtrl.ftc_info <> executeUnit.ftc_info
 
   // Data Conflicts (Read after Write) :  Decode, Excute -> info -> Decode
   decodeCtrl.decodeInfo := decodeUnit.executeStage.data.info

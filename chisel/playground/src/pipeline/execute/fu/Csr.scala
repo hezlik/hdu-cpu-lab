@@ -17,8 +17,8 @@ class Csr extends Module {
     val mode      = Input(UInt(MODE_WID.W))
 
     // Exceptions & Interruptions 
-    val ex_in     = Input(new ExceptionInfo())
-    val ex_out    = Output(new ExceptionInfo())
+    val old_ex    = Input(new ExceptionInfo())
+    val new_ex    = Output(new ExceptionInfo())
     val mret      = Output(new Bool())
   })
 
@@ -35,9 +35,9 @@ class Csr extends Module {
 
   val wdata = WireInit(0.U(XLEN.W))
 
-  val ex_exc  = WireInit(io.ex_in.exception)
-  val ex_int  = WireInit(io.ex_in.interrupt)
-  val ex_tval = WireInit(io.ex_in.tval)
+  val ex_exc  = WireInit(io.old_ex.exception)
+  val ex_int  = WireInit(io.old_ex.interrupt)
+  val ex_tval = WireInit(io.old_ex.tval)
   val mret    = WireInit(false.B)
 
   when (valid) {
@@ -90,8 +90,8 @@ class Csr extends Module {
 
   io.csr_write.wdata := wdata
 
-  io.ex_out.exception := ex_exc
-  io.ex_out.interrupt := ex_int
-  io.ex_out.tval      := ex_tval
+  io.new_ex.exception := ex_exc
+  io.new_ex.interrupt := ex_int
+  io.new_ex.tval      := ex_tval
   io.mret             := mret
 }
