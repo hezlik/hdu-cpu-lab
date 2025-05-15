@@ -39,7 +39,6 @@ class Core extends Module {
 
   // Pipeline : Stages & Units
   // Fetch -> Decode -> Execute -> Memory -> WriteBack
-  // TODO: Split ExceptionUnit
   fetchUnit.decodeStage <> decodeStage.fetchUnit
   executeUnit.ftc_info <> fetchUnit.ftc_info
   decodeStage.decodeUnit <> decodeUnit.decodeStage
