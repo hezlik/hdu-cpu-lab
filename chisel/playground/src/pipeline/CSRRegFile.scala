@@ -95,7 +95,7 @@ class CSRRegFile extends Module {
     BitPat(CSRAddr.pmpcfg0)    -> List(pmpcfg0.U,    "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     BitPat(CSRAddr.pmpaddr0)   -> List(pmpaddr0.U,   "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     
-    BitPat(CSRAddr.tselect)    -> List(tselect.U,    "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFE".U),
+    BitPat(CSRAddr.tselect)    -> List(tselect.U,    "hFFFFFFFF_FFFFFFFF".U, "h00000000_00000000".U),
     BitPat(CSRAddr.tdata1)     -> List(tdata1.U,     "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
     BitPat(CSRAddr.tdata2)     -> List(tdata2.U,     "hFFFFFFFF_FFFFFFFF".U, "hFFFFFFFF_FFFFFFFF".U),
   )
@@ -159,15 +159,26 @@ class CSRRegFile extends Module {
     }
   }
 
-  // mode -> DecodeUnit
+  // mode -> Execute
   io.mode := reg_mode
 
   // External Interruptions
-  val ex = WireInit(io.ex)
+  val ex  = WireInit(io.ex)
+  val mei = io.ext_int.mei
+  val mti = io.ext_int.mti
+  val msi = io.ext_int.msi
 
-  when (io.ext_int.mei) { ex.interrupt(macExternalInterrupt) := true.B }
-  when (io.ext_int.mti) { ex.interrupt(macTimerInterrupt) := true.B }
-  when (io.ext_int.msi) { ex.interrupt(macSoftwareInterrupt) := true.B }
+  when (mei) { ex.interrupt(macExternalInterrupt) := true.B }
+  when (mti) { ex.interrupt(macTimerInterrupt) := true.B }
+  when (msi) { ex.interrupt(macSoftwareInterrupt) := true.B }
+
+  // External Interruptions : Write mip
+  regs(mip) := (
+    regs(mip) |
+    mei << macExternalInterrupt |
+    mti << macTimerInterrupt |
+    msi << macSoftwareInterrupt
+  )
 
   // Handle Exceptions & Interuptions
   // Find the First Interrupt/Exception
