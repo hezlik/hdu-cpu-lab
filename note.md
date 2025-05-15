@@ -719,7 +719,7 @@ regs(waddr) := (io.write.wdata & wmask) | (regs(waddr) & ~wmask)
 感觉自己改了几百行代码，调试极其痛苦，遂只测单组数据：
 
 ```makefile
-make trace TESTBIN_DIR=./test/bin/riscv-test/002-rv64mi-p-breakpoint.bin
+make trace TESTBIN_DIR=./test/bin/riscv-test/012-rv64mi-p-scall.bin
 ```
 
 `playground/src/defines/Const.scala`
@@ -840,14 +840,73 @@ Csr -> DecodeUnit         : interrupt 交给 DecodeUnit
 几个注意的点：
 
 1. 中断有响应条件。
-2. `mstatus` 要写好几个位，和 lab8 中的写 csr 寄存器堆的办法相同。
+2. `mstatus` 要写好几个位，和 lab8 中的写 csr 寄存器堆的办法相同，且注意不要对位不足的写掩码做与操作，位不足的写掩码可以用 `pad` 函数实现高位填充零的位扩展后再取反扩充位。
 3. 出现了几个额外的寄存器 `satp, medeleg, mideleg, pmpcfg0, pmpaddr0, tselect, tdata1, tdata2` 需要多写。
-4. `tselect` 有初值 `h00000000_00000001` 和写掩码 `hFFFFFFFF_FFFFFFFE`。
+4. `tselect` 有初值 `h00000000_00000001` 和写掩码 `h00000000_00000000`。
 5. 然而 ` medeleg, mideleg` 这两个寄存器在不实现 `S` 模式的机器上不应该出现，所以出现了应该当异常跳过。
 6. 有初始值的几个 csr 寄存器应该在隐式复位信号 `reset` 为真的时候赋初值而不是每次都赋初值，而且直接写 `when (reset.asBool)` 会被 `RegInit` 覆盖，需要直接在 `RegInit` 中处理，这在 lab8 中没被卡出来。
 7. `DecodeUnit` 的 `info.valid` 逻辑不包括 `Decoder` 中传出来的 `valid` 而直接赋值为 `DecodeStage` 中传过来的 `valid`，这是因为无法识别的指令应该直接触发异常，所以我把无法识别的指令重定向到 `nop` 了。
 8. 接着 7，`valid` 和异常应该是互斥的，所以在 `valid` 的时候才能处理异常。
 9. `mstatus` 的 `mpp` 位（即 `mstatus(12, 11)`）只能同时被写入支持的模式（包括 csr 指令写入和异常处理写入），如果被写入不支持的模式应该直接覆盖这个字段为支持的模式（测试好像是要求保持原模式）。为了方便以后加入 `S` 模式不用改这个部分，可以用 `mstatus.sxl` 和 `mstatus.uxl` 判断是否支持对应模式。
+10. 接收外部中断时需要修改 `mip` 寄存器，直接对应位或上来，但是测例貌似没卡出来。
+
+助教偷偷加 `bench`，获得了如下的好成绩（不是怎么都掉到 `0.6x` 了）：
+
+```
+Running bench 1: ./test/bin/riscv-test/benchmarks/02-median.riscv.bin
+Test Pass!
+Total instr: 11804
+Total cycle: 16279
+IPC: 0.725106
+Running bench 2: ./test/bin/riscv-test/benchmarks/04-multiply.riscv.bin
+Test Pass!
+Total instr: 49122
+Total cycle: 73897
+IPC: 0.664736
+Running bench 3: ./test/bin/riscv-test/benchmarks/05-pmp.riscv.bin
+Test Pass!
+Total instr: 357
+Total cycle: 530
+IPC: 0.673585
+Running bench 4: ./test/bin/riscv-test/benchmarks/06-qsort.riscv.bin
+Test Pass!
+Total instr: 94032
+Total cycle: 137744
+IPC: 0.682658
+Running bench 5: ./test/bin/riscv-test/benchmarks/07-rsort.riscv.bin
+Test Pass!
+Total instr: 184795
+Total cycle: 198282
+IPC: 0.931981
+Running bench 6: ./test/bin/riscv-test/benchmarks/08-spmv.riscv.bin
+Test Pass!
+Total instr: 1014548
+Total cycle: 1223651
+IPC: 0.829115
+Running bench 7: ./test/bin/riscv-test/benchmarks/09-towers.riscv.bin
+Test Pass!
+Total instr: 8262
+Total cycle: 9468
+IPC: 0.872624
+Running bench 8: ./test/bin/riscv-test/benchmarks/10-vvadd.riscv.bin
+Test Pass!
+Total instr: 6846
+Total cycle: 8557
+IPC: 0.800047
+```
+
+## Lab9 - Rebuild Code
+
+感觉设计的代码有点乱，使用 LABx 标签大大降低了代码的可读性和逻辑性，也大大降低了我的编码效率，所以把这些删了，找代码的不同点就用 git 和 git graph 好了。
+
+其余的主要做了如下修改：
+
+1. 把有些冗余的 `Wire` 后再赋初值改成了 `WireInit`。
+2. `Decoder` 传给 `DecodeUnit` 的信息中 `illegal` 和 `valid` 实际上是同样的效果，这里出现了冗余可以只保留 `valid`。
+3. 把 `Decoder` 的 `io` 里的 `in` 和 `out` 包删了，太冗余了里面就包一个信息，并重写了 `DecodeUnit` 中对应的一部分逻辑。
+4. 把 `Decoder` 中的解析 `imm` 和部分 `FU` 中和机器位数相关的切分数位段从直接写 `64` 改成了写 `XLEN`。
+5. 把对 `ebreak` 和 `ecall` 造成的异常延迟到了 `ExecuteUnit` 中的 `FU` 部件 `CSR` 中处理，此时 `mode` 也得传到 `CSR` 里（其实这里有个 `mode` 的时序问题，但是看起来 `mode` 只有异常的时候可以更改，应该问题不大？）。
+6. `ex_in` 和 `ex_out` 重命名为 `old_ex` 和 `new_ex`，`ftcInfo` 重命名为 `ftc_info`。
 
 ## Lab9 - Report
 
