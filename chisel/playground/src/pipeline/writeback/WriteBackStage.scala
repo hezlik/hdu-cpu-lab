@@ -17,8 +17,14 @@ class MemoryUnitWriteBackUnit extends Bundle {
 }
 class WriteBackStage extends Module {
   val io = IO(new Bundle {
+<<<<<<< HEAD
     val memoryUnit       = Input(new MemoryUnitWriteBackUnit())
     val writeBackUnit    = Output(new MemoryUnitWriteBackUnit())
+=======
+    val memoryUnit    = Input(new MemoryUnitWriteBackUnit())
+    val writeBackUnit = Output(new MemoryUnitWriteBackUnit())
+    // LAB6: New Input : memoryCtrlSignal
+>>>>>>> parent of 341b062 (lab6F finished.)
     val memoryCtrlSignal = Input(new CtrlSignal())
   })
 
@@ -27,5 +33,10 @@ class WriteBackStage extends Module {
   when (io.memoryCtrlSignal.allow_to_go) { data := io.memoryUnit.data }
   when (io.memoryCtrlSignal.do_flush) { data.info.valid := false.B }
 
+<<<<<<< HEAD
+=======
+  // LAB1: WriteBackStage
+  data := io.memoryUnit.data
+>>>>>>> parent of 341b062 (lab6F finished.)
   io.writeBackUnit.data := data
 }
