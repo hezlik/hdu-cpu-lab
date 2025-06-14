@@ -75,6 +75,7 @@ class Core extends Module {
   executeUnit.mret <> csrfile.mret
   executeUnit.pc <> csrfile.pc
   executeUnit.csr_ftc_info <> csrfile.ftc_info
+  decodeUnit.interrupt <> csrfile.interrupt
 
   // InstSram
   fetchUnit.instSram <> io.instSram

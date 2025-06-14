@@ -158,9 +158,14 @@ class CSRRegFile extends Module {
   io.mode := reg_mode
 
   // External Interruptions
+  val ex  = WireInit(io.ex)
   val mei = io.ext_int.mei
   val mti = io.ext_int.mti
   val msi = io.ext_int.msi
+
+  when (mei) { ex.interrupt(macExternalInterrupt) := true.B }
+  when (mti) { ex.interrupt(macTimerInterrupt) := true.B }
+  when (msi) { ex.interrupt(macSoftwareInterrupt) := true.B }
 
   // External Interruptions : Write mip
   regs(mip) := (
@@ -169,15 +174,6 @@ class CSRRegFile extends Module {
     mti << macTimerInterrupt |
     msi << macSoftwareInterrupt
   )
-
-  // External Interruptons
-  val ex = WireInit(io.ex)
-
-  io.interrupt := VecInit(Seq.fill(INT_WID)(false.B))
-
-  when (mei) { ex.interrupt(macExternalInterrupt) := true.B }
-  when (mti) { ex.interrupt(macTimerInterrupt) := true.B }
-  when (msi) { ex.interrupt(macSoftwareInterrupt) := true.B }
 
   // Handle Exceptions & Interuptions
   // Find the First Interrupt/Exception
@@ -237,10 +233,6 @@ class CSRRegFile extends Module {
         0.U(XLEN.W)
       )
     )
-
-    when (intNO =/= noInterrupt.U) {
-      regs(mip) := regs(mip) & ~(1.U << intNO).pad(XLEN)
-    }
   }
 
   // mret : Return Exceptions & Interuptions
@@ -278,4 +270,11 @@ class CSRRegFile extends Module {
 
   io.ftc_info.flush  := flush
   io.ftc_info.target := target
+
+  // interrupt -> DecodeUnit
+  io.interrupt := VecInit(Seq.fill(INT_WID)(false.B))
+
+  when (intNO =/= noInterrupt.U) {
+    io.interrupt(intNO) := true.B
+  }
 }
