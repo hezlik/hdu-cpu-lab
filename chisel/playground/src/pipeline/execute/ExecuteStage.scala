@@ -19,14 +19,8 @@ class DecodeUnitExecuteUnit extends Bundle {
 
 class ExecuteStage extends Module {
   val io = IO(new Bundle {
-<<<<<<< HEAD
     val decodeUnit       = Input(new DecodeUnitExecuteUnit())
     val executeUnit      = Output(new DecodeUnitExecuteUnit())
-=======
-    val decodeUnit  = Input(new DecodeUnitExecuteUnit())
-    val executeUnit = Output(new DecodeUnitExecuteUnit())
-    // LAB6: New Input : decodeCtrlSignal
->>>>>>> parent of 341b062 (lab6F finished.)
     val decodeCtrlSignal = Input(new CtrlSignal())
   })
 

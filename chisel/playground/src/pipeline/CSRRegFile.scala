@@ -37,7 +37,7 @@ class CSRRegFile extends Module {
     val mret      = Input(Bool())
     val pc        = Input(UInt(XLEN.W))
     val ftc_info  = Output(new FetchInfo())
-    val interrupt = Output(Vec(INT_WID, Bool()))
+    // val interrupt = Output(Vec(INT_WID, Bool()))
   })
 
   // Address Map
@@ -272,9 +272,9 @@ class CSRRegFile extends Module {
   io.ftc_info.target := target
 
   // interrupt -> DecodeUnit
-  io.interrupt := VecInit(Seq.fill(INT_WID)(false.B))
+  // io.interrupt := VecInit(Seq.fill(INT_WID)(false.B))
 
-  when (intNO =/= noInterrupt.U) {
-    io.interrupt(intNO) := true.B
-  }
+  // when (intNO =/= noInterrupt.U) {
+  //   io.interrupt(intNO) := true.B
+  // }
 }

@@ -22,7 +22,7 @@ class DecodeUnit extends Module {
     val writeBackRdInfo = Input(new RdInfo())
     
     // Read CSRRegFile
-    val interrupt       = Input(Vec(INT_WID, Bool()))
+    // val interrupt       = Input(Vec(INT_WID, Bool()))
   })
 
   // 译码阶段完成指令的译码操作以及源操作数的准备
@@ -102,11 +102,12 @@ class DecodeUnit extends Module {
   io.executeStage.data.src_info.src2_data := MuxCase(info.imm, src2_table)
 
   io.executeStage.data.ex.exception := ex_exc
+  io.executeStage.data.ex.interrupt := ex_int
   io.executeStage.data.ex.tval      := ex_tval
 
   // Merge Interruptions from CSRRegFile
-  io.executeStage.data.ex.interrupt :=
-    ex_int.zip(io.interrupt).map { 
-    case (ex, intr) => ex || intr 
-  }
+  // io.executeStage.data.ex.interrupt :=
+  //   ex_int.zip(io.interrupt).map { 
+  //   case (ex, intr) => ex || intr 
+  // }
 }
